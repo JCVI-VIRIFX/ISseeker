@@ -1,17 +1,4 @@
 
-##
-## Old unused tables
-##
-DROP TABLE IF EXISTS SNP;
-DROP TABLE IF EXISTS corepos;
-DROP TABLE IF EXISTS insertion_seqs;
-DROP TABLE IF EXISTS facX;
-DROP TABLE IF EXISTS plasmid_matches;
-DROP TABLE IF EXISTS contigs;
-DROP TABLE IF EXISTS match_aggregates;
-DROP TABLE IF EXISTS plasmid_matches;
-
-
 DROP TABLE IF EXISTS is_flank;
 DROP TABLE IF EXISTS is_query_feature;
 DROP TABLE IF EXISTS is_run;
