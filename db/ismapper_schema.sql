@@ -3,6 +3,9 @@ DROP TABLE IF EXISTS is_flank;
 DROP TABLE IF EXISTS is_query_feature;
 DROP TABLE IF EXISTS is_run;
 
+##
+## is_run - Parent table for each set of data from a run
+## 
 CREATE TABLE is_run
 (
         is_run_id int NOT NULL AUTO_INCREMENT,
