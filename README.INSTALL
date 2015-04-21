@@ -1,0 +1,39 @@
+
+(Full documentation with examples is in the doc/ directory)
+
+ISmapper
+
+ISmapper is designed to find partial Insertion Sequences (IS) in contigs, then use the flanking 
+sequences around them to determine where they were inserted against one or more reference sequences (e.g. 
+a chromosome reference along with some plasmids).
+
+It blasts the Insertion Sequence (IS) against a collection of genome contigs in a multi-FASTA file, then 
+extracts the flanks and blasts them against the references. Pairs of flanks that are oriented correctly and 
+are within 10 bases will be joined as begin-end flank pairs that indicate an insertion event.
+
+
+
+ISmapper requires these PERL modules to run (all available from CPAN):
+
+
+Bio::SeqIO
+Config::General
+Cwd
+File::Basename
+Getopt::Long
+List::Util
+Log::Log4perl
+Text::CSV
+Class::Accessor
+
+
+If you do not wish to (or cannot) install these in your PERL system libraries, you can install them in the ISmapper perllib/ directory and they will be used from there,
+
+
+
+ISmapper requires the following applications to run:
+
+infoseq & extractseq (from the EMBOSS package: http://emboss.sourceforge.net/)
+blastall & formatdb (from NCBI’s blast package: ftp://ftp.ncbi.nlm.nih.gov/blast/executables/release/LATEST/)
+
+The locations of these executables must be set in the config file bin/ISmapper.cfg for the application to run.

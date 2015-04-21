@@ -1,0 +1,321 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red39\green47\blue113;\red46\green56\blue134;\red51\green86\blue121;
+\red22\green37\blue81;\red37\green62\blue136;}
+\margl1440\margr1440\vieww36400\viewh26000\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\b\fs28 \cf2 ISmapper Files:\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\fs24 \cf2 \
+\
+\pard\pardeftab720
+
+\b0 \cf0 The code is located in:\
+\
+Filesystem: /local/devel/VIRIFX/software/ISmapper \'a0\
+Subversion Repository: svn://svn.jcvi.org/VIRIFX/ISmapper/trunk\
+\
+There are subdirectories for: annotation, isseq, genomes, output \
+\
+Command line:\
+\
+bin/ISmapper.pl --genome <genome_fasta> -reference <annotation_fasta>\'a0 -is <IS_fasta>\
+\
+\
+genome_fasta - The FASTA file you want to analyze\
+IS_fasta - The IS sequence you are looking for\
+annotation_fasta - The FASTA sequence you want to compare IS flanks against (there can be multiples of these, it should pick the best match for each flank).\'a0\
+\
+Note that the name on the def line in the annotation file will be used as the annotation's "tag" in the system. If it is in the form ">gi|385235550|ref|NC_017387.1| Acinetobacter baumannii TCDC-AB0715 chromosome, complete genome", it will extract out\'a0NC_017387.1, otherwise it will use everything.\
+\
+The program will look for an annotation CSV file with the name name as the annotation fasta file, ending in .coords.csv or .csv or _coords.csv.\
+\
+The annotation coords file should be in the format: start,end,bin,strand,orf_name,description\
+Only start, end, orf_name and description are used. Gene orientation is inferred from the coordinates. The file does not need to be sorted, but every ORF name should be unique.\
+\
+\
+The results will be printed to the screen, and these files placed in the output directory:\
+\
+ISmapper-UH02-ISAba1-log.txt\'a0 (log of the results printed to the screen)\
+ISmapper-UH02-ISAba1.sql \'a0 (database file suitable for importing into MySQL)\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b \cf2 \
+\
+\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\fs28 \cf2 ISMapper Example Run\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b0\fs24 \cf0 \
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b \cf2 Invocation: 
+\b0 \cf0 \
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f1 \cf0 cd /local/devel/VIRIFX/software/ISmapper\
+bin/ISmapper.pl --genome genomes/UH02.fa -reference annotations/ACICU.fasta  -is isseq/ISAba1.fasta 
+\f0 \
+\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b \cf2 Truncated output (this is all also saved in the log file in the output directory):\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b0 \cf0 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f1 \cf0 -bash-4.1$ bin/ISmapper.pl --genome genomes/UH02.fa -reference annotations/ACICU.fasta  -is isseq/ISAba1.fasta \
+Writing  log output to output/ISmapper-UH02-ISAba1-log.txt\
+Processing 1 annotation(s)......Testing annotation fasta file name annotations/ACICU.fasta......OK\
+Found annotation fasta defline ACICU\
+Using annotation target name: ACICU\
+Testing annotation file name annotations/ACICU.coords.csv......Not found\
+Testing annotation file name annotations/ACICU.csv......Not found\
+Testing annotation file name annotations/ACICU_coords.csv......OK\
+ACICU : 3667 unique genes.\
+Processing IS ISAba1 SIZE 1186\
+/usr/local/bin/blastall -p blastn -d genomes/UH02.fa -e .01 -m 8 -i isseq/ISAba1.fasta\
+RAW BLAST OUTPUT:\
+queryid     subjectid   %id match   mis gaps    qstart  qend    sstart  send    e   bit\
+ISAba1  UH02_NODE_7 99.07   972 3   6   215 1180    972 1   0.0 1766\
+ISAba1  UH02_NODE_14    99.20   249 1   1   1   248 1   249 2e-118   422\
+ISAba1  UH02_NODE_75    100.00  38  0   0   1   38  38  1   7e-14   75.8\
+ISAba1  UH02_NODE_75    100.00  34  0   0   1   34  33242   33275   2e-11   67.9\
+...\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\b \cf3 (this is blast output of IS sequences against genome)\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f1\b0 \cf0 \
+\
+ISMAPPER OUTPUT:\
+(** = Rejected/Non-annotatable)\
+UH02_NODE_103   EDGE_END (F)    [95840 to 95873 of 95873] (size=34)     Upstream - 95340-95839\
+UH02_NODE_11    EDGE_BEGIN (R)  [1 to 35 of 71329] (size=35)        Upstream - 36-535\
+UH02_NODE_11    EDGE_END (R)    [71300 to 71329 of 71329] (size=30)     Downstream - 70800-71299\
+UH02_NODE_12    EDGE_BEGIN (R)  [1 to 35 of 43778] (size=35)        Upstream - 36-535\
+UH02_NODE_125   EDGE_END (F)    [225882 to 225917 of 225917] (size=36)      Upstream - 225382-225881\
+UH02_NODE_128   EDGE_END (R)    [1965 to 2001 of 2001] (size=37)        Downstream - 1465-1964\
+** UH02_NODE_14 ENTIRE (F)  [1 to 249 of 249] (size=249) \
+...\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\b \cf2 \
+\
+This is the first analysis of the locations of the IS sequences in the genome FASTA.\
+\
+EDGE_BEGIN - the IS sequence is present at the 5' of the sequence\
+EDGE_END - the IS sequence is present at the 3' of the sequence\
+ENTIRE - the entire sequence is IS, so there are no flanks to be analyzed.\
+EMBED - IS in the middle with at least ~50 bases extra on each side\
+EMBED_TRUNC - Embedded, but doesn't go completely to IS ends\
+EDGE_LONG - An Edge, but IS seq too long (gaps?)\
+EDGE_BEGIN_TRUNC/EDGE_END_TRUNC - Edge but doesn't go completely to IS end\
+UNKN - Not sure what this is\
+\
+Note that UH02_NODE_11 has both EDGE_BEGIN and EDGE_END.\
+The letter in parenthesis is the orientation of the IS sequence (Forward/Reverse)\
+On the far right it lists the location of the flanking code that it will extract from from the sequence, and whether is it Upstream or Downstream of the sequence (based on the IS sequence's orientation).\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f1\b0 \cf0 \
+\
+\
+\
+\
+RAW ANNOTATION BLAST OUTPUT:\
+queryid       subjectid   %id match   mis gaps    qstart  qend    sstart  send    e   bit\
+UH02_NODE_103_BF_95340_95839  ACICU   99.40   500 3   0   1   500 1379986 1380485 0.0  967\
+UH02_NODE_103_BF_95340_95839    ACICU   89.66   503 46  6   1   500 2410395 2409896 3e-153   537\
+UH02_NODE_103_BF_95340_95839    ACICU   82.99   482 54  13  1   470 1348100 1348565 2e-61    232\
+UH02_NODE_103_BF_95340_95839    ACICU   93.71   143 8   1   354 495 3668749 3668607 5e-53    204\
+...\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\b \cf2 This is the raw blast of the flanking sequences against the annotated FASTAs, and which annotations and locations they hit.\
+The extracted sequences are named based on their original location and orientation: Begin/End, Forward/Reverse.\
+UH02_NODE_103_BF_95340_95839 is the Beginning-Forward flank that came from the first entry in the previous blast.
+\b0 \cf4 \
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f1 \cf0 \
+\
+\
+\
+ANNOTATION-BLASTED FLANKS:\
+name contig_dir flank_loc annot_dir closest_base annotation\
+UH02_NODE_103_BF_95340_95839 F B F 1380485 ACICU\
+UH02_NODE_11_BR_36_535 R B F 1673192 ACICU\
+UH02_NODE_11_ER_70800_71299 R E F 1744455 ACICU\
+UH02_NODE_12_BR_36_535 R B R 1891835 ACICU\
+UH02_NODE_125_BF_225382_225881 F B F 3650789 ACICU\
+UH02_NODE_128_ER_1465_1964 R E F 2537668 ACICU\
+UH02_NODE_16_BF_103284_103783 F B R 1744447 ACICU\
+UH02_NODE_18_ER_65401_65900 R E F 1673200 ACICU\
+UH02_NODE_2_BR_36_535 R B R 2402319 ACICU\
+UH02_NODE_20_BR_36_535 R B R 3273687 ACICU\
+UH02_NODE_22_EF_31_530 F E F 1262207 ACICU\
+UH02_NODE_26_EF_36_535 F E F 3650781 ACICU\
+UH02_NODE_277_BF_23130_23629 F B R 1583084 ACICU\
+UH02_NODE_296_BF_77843_78342 F B R 1934429 ACICU\
+UH02_NODE_3_EF_39_538 F E F 3273680 ACICU\
+UH02_NODE_305_EF_32_531 F E R 1583092 ACICU\
+UH02_NODE_305_ER_157375_157874 R E R 1425689 ACICU\
+UH02_NODE_324_EF_39_538 F E F 2715781 ACICU\
+UH02_NODE_51_BR_38_537 R B R 1262215 ACICU\
+UH02_NODE_59_BR_36_535 R B F 2560651 ACICU\
+UH02_NODE_59_ER_120352_120851 R E F 2681452 ACICU\
+UH02_NODE_60_EF_32_531 F E F 2402311 ACICU\
+UH02_NODE_75_BR_39_538 R B R 2715788 ACICU\
+UH02_NODE_75_BF_32742_33241 F B R 2681444 ACICU\
+UH02_NODE_9_EF_33_532 F E R 1934437 ACICU\
+UH02_NODE_9_ER_35557_36056 R E R 1898413 ACICU\
+UH02_NODE_92_BR_36_535 R B R 1898421 ACICU\
+UH02_NODE_92_ER_6131_6630 R E R 1891827 ACICU\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\b \cf2 \
+This is the analysis of the best blast of each extracted flank against the reference. \
+The three letters following the name represent the original orientation,  flank location (begin/end), and this annotation blast orientation.
+\f1\b0 \cf0 \
+\
+\
+\
+\
+\
+\
+ANNOTATED FLANKS (ACICU):\
+_/--ACICU F B W 1262207 [      +0] INSIDE ACICU_01161 (1262150-1262857) [UH02_NODE_22_EF_31_530]\
+ \\--ACICU F E W 1262215 [      +9] INSIDE ACICU_01161 (1262150-1262857) [UH02_NODE_51_BR_38_537]\
+    ACICU F E W 1380485 [ +118271] BETWEEN ACICU_01276 (1379887-1380315) AND ACICU_01277 (1380492-1380821) [UH02_NODE_103_BF_95340_95839]\
+    ACICU F B W 1425689 [  +45205] BETWEEN ACICU_01320 (1425254-1425541) AND ACICU_01321 (1425731-1426183) [UH02_NODE_305_ER_157375_157874]\
+_/--ACICU R E W 1583084 [ +157396] BETWEEN ACICU_01473 (1581200-1582645) AND ACICU_01474 (1583299-1584117) [UH02_NODE_277_BF_23130_23629]\
+ \\--ACICU R B W 1583092 [      +9] BETWEEN ACICU_01473 (1581200-1582645) AND ACICU_01474 (1583299-1584117) [UH02_NODE_305_EF_32_531]\
+_/--ACICU R E W 1673192 [  +90101] INSIDE ACICU_01560 (1672369-1673193) [UH02_NODE_11_BR_36_535]\
+ \\--ACICU R B W 1673200 [      +9] BETWEEN ACICU_01560 (1672369-1673193) AND ACICU_01561 (1673592-1674152) [UH02_NODE_18_ER_65401_65900]\
+_/--ACICU R E P 1744447 [  +71248] BETWEEN ACICU_01633 (1741372-1744041) AND ACICU_01634 (1744817-1746607) [UH02_NODE_16_BF_103284_103783]\
+ \\--ACICU R B P 1744455 [      +9] BETWEEN ACICU_01633 (1741372-1744041) AND ACICU_01634 (1744817-1746607) [UH02_NODE_11_ER_70800_71299]\
+_/--ACICU F B W 1891827 [ +147373] BETWEEN ACICU_01774 (1891038-1891823) AND ACICU_01775 (1892147-1893133) [UH02_NODE_92_ER_6131_6630]\
+ \\--ACICU F E W 1891835 [      +9] BETWEEN ACICU_01774 (1891038-1891823) AND ACICU_01775 (1892147-1893133) [UH02_NODE_12_BR_36_535]\
+_/--ACICU F B W 1898413 [   +6579] INSIDE ACICU_01780 (1898234-1898764) [UH02_NODE_9_ER_35557_36056]\
+ \\--ACICU F E W 1898421 [      +9] INSIDE ACICU_01780 (1898234-1898764) [UH02_NODE_92_BR_36_535]\
+_/--ACICU R E W 1934429 [  +36009] INSIDE ACICU_01812 (1933721-1934455) [UH02_NODE_296_BF_77843_78342]\
+ \\--ACICU R B W 1934437 [      +9] INSIDE ACICU_01812 (1933721-1934455) [UH02_NODE_9_EF_33_532]\
+_/--ACICU F B W 2402311 [ +467875] BETWEEN ACICU_02272 (2399968-2402124) AND ACICU_02273 (2402317-2402823) [UH02_NODE_60_EF_32_531]\
+ \\--ACICU F E P 2402319 [      +9] INSIDE ACICU_02273 (2402317-2402823) [UH02_NODE_2_BR_36_535]\
+    ACICU R B W 2537668 [ +135350] BETWEEN ACICU_02400 (2536181-2537548) AND ACICU_02401 (2537899-2538810) [UH02_NODE_128_ER_1465_1964]\
+    ACICU R E P 2560651 [  +22984] BETWEEN ACICU_02420 (2559554-2560090) AND ACICU_02421 (2560673-2561311) [UH02_NODE_59_BR_36_535]\
+_/--ACICU R E W 2681444 [ +120794] INSIDE ACICU_02539 (2679847-2682696) [UH02_NODE_75_BF_32742_33241]\
+ \\--ACICU R B W 2681452 [      +9] INSIDE ACICU_02539 (2679847-2682696) [UH02_NODE_59_ER_120352_120851]\
+_/--ACICU F B W 2715781 [  +34330] BETWEEN ACICU_02563 (2714652-2715662) AND ACICU_02564 (2715809-2716939) [UH02_NODE_324_EF_39_538]\
+ \\--ACICU F E P 2715788 [      +8] BETWEEN ACICU_02563 (2714652-2715662) AND ACICU_02564 (2715809-2716939) [UH02_NODE_75_BR_39_538]\
+_/--ACICU F B W 3273680 [ +557893] INSIDE ACICU_03077 (3272238-3274367) [UH02_NODE_3_EF_39_538]\
+ \\--ACICU F E W 3273687 [      +8] INSIDE ACICU_03077 (3272238-3274367) [UH02_NODE_20_BR_36_535]\
+_/--ACICU F B W 3650781 [ +377095] INSIDE ACICU_03437 (3650446-3650841) [UH02_NODE_26_EF_36_535]\
+ \\--ACICU F E P 3650789 [      +9] INSIDE ACICU_03437 (3650446-3650841) [UH02_NODE_125_BF_225382_225881]\
+\
+\
+UNANNOTATED FLANKS:\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0 \cf0 \
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b \cf5 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf6 This is the final pairing of begin/end flanks in the same orientation and within the proper base tolerance (paired by the indicators on the very left). The three letters after the reference name are: Forward/Reverse, Begin/End, Whole/Partial match.\
+The number in brackets is the distance from the previous flanking sequence, to show the distance between mate pairs. \
+The information to the right lists the location of the flank relative to the nearest gene(s).\
+The name in brackets on the far right is the flank sequence name, with the previous encoded information about direction and orientation relative to the original IS sequence.\
+Unannotated flanks did not hit anything in the reference sequence(s).\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f1\b0 \cf6 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0 \cf0 \
+\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b\fs28 \cf2 Database
+\b0\fs24 \cf0 \
+\
+\
+The schema for the SQL data is located in ~/db/\
+An account with admin access can make the schema like so:\
+\
+mysql -h mysql56-lan-dev -P 3306 -u <USER> -p<PASSWORD>  -D <DBNAME>  < db/aceto_schema.sql \
+\
+\
+Then load the data like so:\
+\
+mysql -h mysql56-lan-dev -P 3306 -u <USER> -p<PASSWORD>  -D <DBNAME>  < output/ISmapper-UH02-ISAba1.sql \
+\
+(The script will delete any existing data for the same genome name and references first.)\
+\
+\
+The raw data will be in the table 
+\b is_flank
+\b0 . The paired data is in the view 
+\b flank_pairs
+\b0 . I added a 
+\b lowest_base
+\b0  column to avoid having to deal with NULLs for unpaired flanks and to make sorting easier. So to walk the results and view all paired and unpaired flanks:\
+\
+\
+mysql -h mysql56-lan-dev -P 3306 -u <USER> -p<PASSWORD>  -D <DBNAME> \
+\
+select * from flank_pairs order by q_genome, reference, lowest_base ;\
+\
+\
+\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f1\fs20 \cf0 +-------------+----------------+------------+----------+-----------+------------+------------------+---------------+-------------------+------------------+---------------------+----------+----------------+-------------+-----------------+-------------------+--------------+-------------+\
+| orientation | begin_flank_id | is_element | q_genome | reference | begin_base | begin_after_gene | begin_in_gene | begin_before_gene | flank_separation | begin_match_quality | end_base | end_after_gene | end_in_gene | end_before_gene | end_match_quality | end_flank_id | lowest_base |\
++-------------+----------------+------------+----------+-----------+------------+------------------+---------------+-------------------+------------------+---------------------+----------+----------------+-------------+-----------------+-------------------+--------------+-------------+\
+| F           |              2 | ISAba1     | UH02     | ACICU     |    1262207 | NULL             | ACICU_01161   | NULL              |                9 | W                   |  1262215 | NULL           | ACICU_01161 | NULL            | W                 |            1 |     1262207 |\
+| F           |           NULL | ISAba1     | UH02     | ACICU     |       NULL | NULL             | NULL          | NULL              |             NULL | NULL                |  1380485 | ACICU_01276    | NULL        | ACICU_01277     | W                 |            3 |     1380485 |\
+| F           |             27 | ISAba1     | UH02     | ACICU     |    1425689 | ACICU_01320      | NULL          | ACICU_01321       |             NULL | W                   |     NULL | NULL           | NULL        | NULL            | NULL              |         NULL |     1425689 |\
+| R           |              5 | ISAba1     | UH02     | ACICU     |    1583092 | ACICU_01473      | NULL          | ACICU_01474       |                9 | W                   |  1583084 | ACICU_01473    | NULL        | ACICU_01474     | W                 |            4 |     1583084 |\
+| R           |              7 | ISAba1     | UH02     | ACICU     |    1673200 | ACICU_01560      | NULL          | ACICU_01561       |                9 | W                   |  1673192 | NULL           | ACICU_01560 | NULL            | W                 |            6 |     1673192 |\
+| R           |              9 | ISAba1     | UH02     | ACICU     |    1744455 | ACICU_01633      | NULL          | ACICU_01634       |                9 | P                   |  1744447 | ACICU_01633    | NULL        | ACICU_01634     | P                 |            8 |     1744447 |\
+| F           |             11 | ISAba1     | UH02     | ACICU     |    1891827 | ACICU_01774      | NULL          | ACICU_01775       |                9 | W                   |  1891835 | ACICU_01774    | NULL        | ACICU_01775     | W                 |           10 |     1891827 |\
+| F           |             13 | ISAba1     | UH02     | ACICU     |    1898413 | NULL             | ACICU_01780   | NULL              |                9 | W                   |  1898421 | NULL           | ACICU_01780 | NULL            | W                 |           12 |     1898413 |\
+| R           |             15 | ISAba1     | UH02     | ACICU     |    1934437 | NULL             | ACICU_01812   | NULL              |                9 | W                   |  1934429 | NULL           | ACICU_01812 | NULL            | W                 |           14 |     1934429 |\
+| F           |             17 | ISAba1     | UH02     | ACICU     |    2402311 | ACICU_02272      | NULL          | ACICU_02273       |                9 | W                   |  2402319 | NULL           | ACICU_02273 | NULL            | P                 |           16 |     2402311 |\
+| R           |             28 | ISAba1     | UH02     | ACICU     |    2537668 | ACICU_02400      | NULL          | ACICU_02401       |             NULL | W                   |     NULL | NULL           | NULL        | NULL            | NULL              |         NULL |     2537668 |\
+| R           |           NULL | ISAba1     | UH02     | ACICU     |       NULL | NULL             | NULL          | NULL              |             NULL | NULL                |  2560651 | ACICU_02420    | NULL        | ACICU_02421     | P                 |           18 |     2560651 |\
+| R           |             20 | ISAba1     | UH02     | ACICU     |    2681452 | NULL             | ACICU_02539   | NULL              |                9 | W                   |  2681444 | NULL           | ACICU_02539 | NULL            | W                 |           19 |     2681444 |\
+| F           |             22 | ISAba1     | UH02     | ACICU     |    2715781 | ACICU_02563      | NULL          | ACICU_02564       |                8 | W                   |  2715788 | ACICU_02563    | NULL        | ACICU_02564     | P                 |           21 |     2715781 |\
+| F           |             24 | ISAba1     | UH02     | ACICU     |    3273680 | NULL             | ACICU_03077   | NULL              |                8 | W                   |  3273687 | NULL           | ACICU_03077 | NULL            | W                 |           23 |     3273680 |\
+| F           |             26 | ISAba1     | UH02     | ACICU     |    3650781 | NULL             | ACICU_03437   | NULL              |                9 | W                   |  3650789 | NULL           | ACICU_03437 | NULL            | P                 |           25 |     3650781 |\
++-------------+----------------+------------+----------+-----------+------------+------------------+---------------+-------------------+------------------+---------------------+----------+----------------+-------------+-----------------+-------------------+--------------+-------------+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\fs24 \cf0 \
+\
+To only see flank pairs, select \'85 where flank_separation is not null. \
+\
+To see unmatched flanks, select \'85 where flank_separation is null.\
+\
+}
