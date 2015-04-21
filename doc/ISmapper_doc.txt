@@ -26,7 +26,7 @@ Text::CSV
 Class::Accessor
 
 
-If you do not wish to (or cannot) install these in your PERL system libraries, you can install them in the perllib/ directory and they will be used from there,
+If you do not wish to (or cannot) install these in your PERL system libraries, you can install them in the perllib/ directory and they will be used from there.
 
 
 
