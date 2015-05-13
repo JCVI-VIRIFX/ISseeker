@@ -40,7 +40,6 @@ our @EXPORT_OK = qw(
 	$BLASTALL_PATH
 	$FORMATDB_PATH
 	$EXTRACTSEQ_PATH
-	$INFOSEQ_PATH
     $DEFAULT_REQ_IS_PERCENT_ID
 	$DEFAULT_REQ_FLANK_PERCENT_ID
 );
@@ -52,7 +51,6 @@ require Exporter;
 our %config;
 
 our $SIZEFASTA_PATH;
-our $INFOSEQ_PATH;
 our $BLASTALL_PATH;
 our $FORMATDB_PATH;
 our $EXTRACTSEQ_PATH;
@@ -74,7 +72,6 @@ sub Process
 	##
 	## Required
 	##
-	$INFOSEQ_PATH          			 = $config{"INFOSEQ_PATH"} || die "INFOSEQ_PATH not set in config file $file!\n";
 	$BLASTALL_PATH           		= $config{"BLASTALL_PATH"} || die "BLASTALL_PATH not set in config file $file!\n";
 	$FORMATDB_PATH           		= $config{"FORMATDB_PATH"} || die "FORMATDB_PATH not set in config file $file!\n";
 	$EXTRACTSEQ_PATH         		= $config{"EXTRACTSEQ_PATH"} || die "EXTRACTSEQ_PATH not set in config file $file!\n";

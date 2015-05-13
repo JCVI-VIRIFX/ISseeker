@@ -57,7 +57,6 @@ use InsertionSeq::Defaults qw(
     $BLASTALL_PATH
     $FORMATDB_PATH
     $EXTRACTSEQ_PATH
-    $INFOSEQ_PATH
     $DEFAULT_REQ_IS_PERCENT_ID
     $DEFAULT_REQ_FLANK_PERCENT_ID
 );
@@ -144,11 +143,7 @@ sub init_logging
 sub checkForRequiredPrograms
 {
 	my $error = 0;
-	if ( !-e $INFOSEQ_PATH || !-x $INFOSEQ_PATH )
-    {
-        print "Can't exec infoseq at $INFOSEQ_PATH\n";
-        $error = 1;
-    }
+
 	if ( !-e $FORMATDB_PATH || !-x $FORMATDB_PATH )
 	{
 		print "Can't find formatdb at $FORMATDB_PATH\n";
@@ -169,18 +164,11 @@ sub sizeFasta
     my $fileName = shift @_;
 
     my %result;
-
-    my $sizeFastaOut = `$INFOSEQ_PATH -noheading -only -name -length  $fileName 2> /dev/null`;
-
-    my @lenLines = split /\n/, $sizeFastaOut;
-    foreach my $line (@lenLines)
-    {
-        chomp $line;
-        $line =~ s/\s*$//;
-        my ( $name, $fSize ) = split( /\s+/, $line );
-        $result{$name} = $fSize;
-
-        #print "SizeFasta: $name = $fSize\n";
+    
+    my $reader=new Bio::SeqIO(-format=>'fasta',-file=>$fileName);
+	while (my $seqRec=$reader->next_seq)
+	{
+		$result{$seqRec->id} = length($seqRec->seq());
     }
 
     return %result;
