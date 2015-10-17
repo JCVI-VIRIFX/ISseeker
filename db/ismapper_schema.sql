@@ -82,7 +82,7 @@ CREATE TABLE is_flank
     contig_count int NOT NULL comment 'Number of contigs that matched this flank (only 1 is in is_query_feature)',
     PRIMARY KEY(is_flank_id),
     INDEX(reference,nearest_base),
-    UNIQUE INDEX (is_element, reference, q_genome, nearest_base )
+    UNIQUE INDEX (is_element, reference, q_genome, nearest_base, orientation )
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 ALTER TABLE is_flank ADD CONSTRAINT fk_run_fk FOREIGN KEY (is_run_id) REFERENCES is_run(is_run_id);
