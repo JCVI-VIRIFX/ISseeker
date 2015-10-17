@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS is_run;
 ## 
 CREATE TABLE is_run
 (
-        is_run_id int NOT NULL AUTO_INCREMENT,
+    is_run_id int NOT NULL AUTO_INCREMENT,
 	is_run_element VARCHAR(255) NOT NULL,
 	is_run_genome VARCHAR(255) NOT NULL,
 	is_run_references VARCHAR(512) NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE is_query_feature
         is_annotated bit NOT NULL comment 'TRUE = has a record in the is_flank table',
         PRIMARY KEY(is_qf_id),
         INDEX(begin_base,end_base),
-        UNIQUE INDEX (is_run_id, is_element, reference, q_genome, s_genome, contig_name, begin_base )
+        UNIQUE INDEX (is_run_id, is_element, reference, q_genome, s_genome, contig_name, begin_base, orientation )
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 ALTER TABLE is_query_feature ADD CONSTRAINT qf_run_fk FOREIGN KEY (is_run_id) REFERENCES is_run(is_run_id);
@@ -57,7 +57,9 @@ ALTER TABLE is_query_feature ADD CONSTRAINT qf_run_fk FOREIGN KEY (is_run_id) RE
 
 
 ## 
-##  contig_name moved to is_query_feature
+##  is_flank
+##
+##   Flank vs Annotation extra information
 ##
 CREATE TABLE is_flank
 (
