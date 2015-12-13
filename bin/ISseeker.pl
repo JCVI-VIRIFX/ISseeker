@@ -2,7 +2,7 @@
 
 #############################################################################
 #
-#    ISmapper    - Finds portions of contigs flanking IS sequences
+#    ISseeker    - Finds portions of contigs flanking IS sequences
 #                  and blasts them against annotated references 
 #                  to infer IS insertion points
 #
@@ -62,7 +62,7 @@ use InsertionSeq::Defaults qw(
 );
 
 
-my $DEFAULT_CONFIG_FILE = (dirname abs_path $0)."/ISmapper.cfg";
+my $DEFAULT_CONFIG_FILE = (dirname abs_path $0)."/ISseeker.cfg";
 
 
 my $DEFAULT_OUTPUT_PATH		= "output";
@@ -101,7 +101,7 @@ main();
 sub init_logging
 {
 	my ($genome_name, $is_name, $loglevel_param) = @_;
-	$logfile_path = "$output_path/ISmapper-$genome_name-$is_name-log.txt";
+	$logfile_path = "$output_path/ISseeker-$genome_name-$is_name-log.txt";
 	
 	$loglevel = "INFO";
 	if (defined($loglevel_param))
@@ -325,7 +325,7 @@ sub main
 
 	#usage instructions for command line execution
 	my $usage =
-"USAGE: ./ISmapper.pl --genome <genome_fasta> --is <is_fstaile> --reference <reference_fasta> [--is_pct <float>] [--flank_pct <float>] [--out <output_dir>] [--config <config_file>] [--verbose] [--log <level>] [--help]\n"
+"USAGE: ./ISseeker.pl --genome <genome_fasta> --is <is_fstaile> --reference <reference_fasta> [--is_pct <float>] [--flank_pct <float>] [--out <output_dir>] [--config <config_file>] [--verbose] [--log <level>] [--help]\n"
 	  . "\t--genome: path to query genome sequence in FASTA format\n"
 	  . "\t--is: path to IS element sequence in FASTA format\n"
 	  . "\t--reference: basename of reference FASTA file (with corresponding _coords files for each entry)\n"
@@ -1019,7 +1019,7 @@ sub blast_is_genome()
 	$log->debug("SQL:\n");
 	$log->debug($cleanSQL);
 
-	my $sqlfile_path = "$output_path/ISmapper-$genome_name-$is_name$anno_file_ext.sql";
+	my $sqlfile_path = "$output_path/ISseeker-$genome_name-$is_name$anno_file_ext.sql";
 	$log->info("Writing SQL file $sqlfile_path\n");
 	open SQL, "> $sqlfile_path" || $log->logdie ("Cannot open SQL file $sqlfile_path\n");
 	print SQL $cleanSQL;
@@ -1028,7 +1028,7 @@ sub blast_is_genome()
 	my $make_csv_file = 0;
 	if ($make_csv_file)
 	{
-		my $csv_file_path = "$output_path/ISmapper-$genome_name-$is_name$anno_file_ext.csv";
+		my $csv_file_path = "$output_path/ISseekeseeker-$genome_name-$is_name$anno_file_ext.csv";
     	$log->info("Writing CSV file $csv_file_path\n");
     	open CSV, "> $csv_file_path" || $log->logdie ("Cannot open CSV file $sqlfile_path\n");
 		print CSV "$InsertionSeq::Flank::CSV_HEADER";
