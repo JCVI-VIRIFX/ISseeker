@@ -2,7 +2,7 @@ package InsertionSeq::Annotation;
 
 #############################################################################
 #
-#    ISmapper    - Finds portions of contigs flanking IS sequences
+#    ISseeker    - Finds portions of contigs flanking IS sequences
 #                  and blasts them against annotated references 
 #                  to infer IS insertion points
 #
