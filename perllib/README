@@ -1,4 +1,4 @@
-ISmapper requires these PERL modules to run (all available from CPAN):
+ISseeker requires these PERL modules to run (all available from CPAN):
 
 
 Bio::SeqIO
