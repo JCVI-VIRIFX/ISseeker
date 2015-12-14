@@ -1,9 +1,9 @@
 
 (Full documentation with examples is in the doc/ directory)
 
-ISmapper
+ISseeker
 
-ISmapper is designed to find partial Insertion Sequences (IS) in contigs, then use the flanking 
+ISseeker is designed to find partial Insertion Sequences (IS) in contigs, then use the flanking 
 sequences around them to determine where they were inserted against one or more reference sequences (e.g. 
 a chromosome reference along with some plasmids).
 
@@ -13,7 +13,7 @@ are within 10 bases will be joined as begin-end flank pairs that indicate an ins
 
 
 
-ISmapper requires these PERL modules to run (all available from CPAN):
+ISseeker requires these PERL modules to run (all available from CPAN):
 
 
 Bio::SeqIO
@@ -27,13 +27,13 @@ Text::CSV
 Class::Accessor
 
 
-If you do not wish to (or cannot) install these in your PERL system libraries, you can install them in the ISmapper perllib/ directory and they will be used from there,
+If you do not wish to (or cannot) install these in your PERL system libraries, you can install them in the ISseeker perllib/ directory and they will be used from there,
 
 
 
-ISmapper requires the following applications to run:
+ISseeker requires the following applications to run:
 
 extractseq (from the EMBOSS package: http://emboss.sourceforge.net/)
 blastall & formatdb (from NCBI’s blast package: ftp://ftp.ncbi.nlm.nih.gov/blast/executables/release/LATEST/)
 
-The locations of these executables must be set in the config file bin/ISmapper.cfg for the application to run.
+The locations of these executables must be set in the config file bin/ISseeker.cfg for the application to run.
