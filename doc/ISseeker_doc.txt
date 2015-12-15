@@ -255,7 +255,7 @@ Unannotated flanks did not hit anything in the reference sequence(s).
 Database
 
 
-The schema for the SQL data is located in the directory db/acineto.sql
+The schema for the SQL data is located in the directory db/ISseeker_schema.sql
 
 An account with admin access can make the schema like so:
 
