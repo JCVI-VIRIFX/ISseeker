@@ -80,7 +80,7 @@ my @annotation_file_extentions = (
 	);
 	
 #global variables
-use vars qw($is_path $genome_path $log_level $log_path $genome_name @plasmid_annot @annot_fastas @annotations %annotationHash $output_path %blast_hash);
+use vars qw($is_path $dustparam $genome_path $log_level $log_path $genome_name @plasmid_annot @annot_fastas @annotations %annotationHash $output_path %blast_hash);
 
 
 my %LOG_LEVELS = 
@@ -178,7 +178,9 @@ sub formatDB
 {
 	my $fileName = shift @_;
 
-	my $formatDBOut = system("$FORMATDB_PATH -i $fileName -p F -o T");
+	## Don't use "-o T" - it has problems with long contig names:
+	#my $formatDBOut = system("$FORMATDB_PATH -i $fileName -p F -o T");
+	my $formatDBOut = system("$FORMATDB_PATH -i $fileName -p F");
 
 	$log->logdie ("Error running $FORMATDB_PATH $fileName\n") unless ($formatDBOut == 0);
 
@@ -322,6 +324,7 @@ sub main
 	my $config_file = $DEFAULT_CONFIG_FILE;
 	$genome_path = "";
 	$is_path     = "";
+	my $dust = "";
 
 	#usage instructions for command line execution
 	my $usage =
@@ -331,6 +334,7 @@ sub main
 	  . "\t--reference: basename of reference FASTA file (with corresponding _coords files for each entry)\n"
 	  . "\t--is_pct: percent ID cutoff for including an IS blast hit against a contig or the reference\n"
 	  . "\t--flank_pct: percent ID cutoff for including a flank blast hit against the reference\n"
+	  . "\t--dust: use blast low-complexity filter (T/F)\n"
 	  . "\t--out: path to output files\n"
 	  . "\t--config: alternate config file with app locations\n"
 	  . "\t--log: logging level (0-3)\n"
@@ -346,8 +350,16 @@ sub main
 		"out=s" 		=> \$output_path,
 		"reference=s@" 	=> \@annot_fastas,
 		"log=i"  		=> \$log_level,
-		"config=s"     	=> \$config_file
+		"config=s"     	=> \$config_file,
+		"dust=s"     	=> \$dust
 	);
+
+	if ($dust)
+	{
+		$dust = uc $dust;
+		die "--dust param must be T or F" unless ($dust eq "T" or $dust eq "F");
+		$dustparam = "-F $dust" ;
+	}
 
 	InsertionSeq::Defaults::Process( $config_file );
 
@@ -497,7 +509,7 @@ sub blast_is_genome()
 	formatDB($genome_path);
 	
 	#run blast of seq against genome
-	my $command = "$BLASTALL_PATH -p blastn -d $genome_path -e .01 -m 8 -i $is_path";
+	my $command = "$BLASTALL_PATH -p blastn -d $genome_path -e .01 -m 8 $dustparam -i $is_path";
 	$log->info("$command\n");
 	my $blastout = `$command`;
 	$log->info("RAW BLAST OUTPUT:\n");
@@ -1028,7 +1040,7 @@ sub blast_is_genome()
 	my $make_csv_file = 0;
 	if ($make_csv_file)
 	{
-		my $csv_file_path = "$output_path/ISseekeseeker-$genome_name-$is_name$anno_file_ext.csv";
+		my $csv_file_path = "$output_path/ISseeker-$genome_name-$is_name$anno_file_ext.csv";
     	$log->info("Writing CSV file $csv_file_path\n");
     	open CSV, "> $csv_file_path" || $log->logdie ("Cannot open CSV file $sqlfile_path\n");
 		print CSV "$InsertionSeq::Flank::CSV_HEADER";
@@ -1065,7 +1077,7 @@ sub blastAnnotation
 	
 	$log->debug("Blast $flank->{contig_direction} $flank->{contig_name} \n");
 	
-	my $command ="$BLASTALL_PATH  -p blastn -d $annotation_fasta  -e .0000000001 -m 8 -i $flank_seq_file";
+	my $command ="$BLASTALL_PATH  -p blastn -d $annotation_fasta  -e .0000000001 -m 8 $dustparam -i $flank_seq_file";
 	$log->debug("$command\n");
 	
 	my $blastout = `$command`;
@@ -1167,7 +1179,7 @@ sub blast_is_against_annotation()
     formatDB($annot_fasta_path);
 
     #run blast of seq against annotation
-    my $command = "$BLASTALL_PATH -p blastn -d $annot_fasta_path -e .0000000001 -m 8 -i $is_path";
+    my $command = "$BLASTALL_PATH -p blastn -d $annot_fasta_path -e .0000000001 -m 8 $dustparam -i $is_path";
     $log->info("$command\n");
     my $blastout = `$command`;
     $log->info("IS vs. ANNOTATION BLAST OUTPUT (pct id cutoff = $is_req_pct):\n");
