@@ -216,7 +216,7 @@ sub add_blast_hit
 	
 	if ($blast_hit->{qstart} <= $ANNOT_BASE_WIGGLE_ROOM 
 		&& $blast_hit->{qlength} - $blast_hit->{qend} <= $ANNOT_BASE_WIGGLE_ROOM
-		&& $blast_hit->passes_pct_threshold())
+		&& $blast_hit->passes_thresholds())
 	{
 		$blast_hit->type($InsertionSeq::ContigBlastHit::TYPE_FLANK_WHOLE);
 	}
@@ -272,12 +272,12 @@ sub pick_best_blast
 			if ($self->{location} eq $LOCATION_BEGIN)
 			{
 				## Maximum query end
-				@sorted_list = sort { $b->passes_pct_threshold() <=> $a->passes_pct_threshold() || $b->{qend} <=> $a->{qend} || $b->{qhitlen} <=> $a->{qhitlen} } @{$self->{blast_hits}}
+				@sorted_list = sort { $b->passes_thresholds() <=> $a->passes_thresholds() || $b->{qend} <=> $a->{qend} || $b->{qhitlen} <=> $a->{qhitlen} } @{$self->{blast_hits}}
 			}
 			elsif ($self->{location} eq $LOCATION_END)
 			{
 				# Minimum query start
-				@sorted_list =  sort  { $b->passes_pct_threshold() <=> $a->passes_pct_threshold() || $a->{qstart} <=> $b->{qstart} || $b->{qhitlen} <=> $a->{qhitlen}  } @{$self->{blast_hits}}
+				@sorted_list =  sort  { $b->passes_thresholds() <=> $a->passes_thresholds() || $a->{qstart} <=> $b->{qstart} || $b->{qhitlen} <=> $a->{qhitlen}  } @{$self->{blast_hits}}
 			}
 			else
 			{
@@ -292,12 +292,12 @@ sub pick_best_blast
 			if ($self->{location} eq $LOCATION_BEGIN)
 			{
 				# Minimum query start
-				@sorted_list =  sort  { $b->passes_pct_threshold() <=> $a->passes_pct_threshold() || $a->{qstart} <=> $b->{qstart} || $b->{qhitlen} <=> $a->{qhitlen}  } @{$self->{blast_hits}}		
+				@sorted_list =  sort  { $b->passes_thresholds() <=> $a->passes_thresholds() || $a->{qstart} <=> $b->{qstart} || $b->{qhitlen} <=> $a->{qhitlen}  } @{$self->{blast_hits}}		
 			}
 			elsif ($self->{location} eq $LOCATION_END)
 			{
 				## Maximum query end
-				@sorted_list =  sort  { $b->passes_pct_threshold() <=> $a->passes_pct_threshold() || $b->{qend} <=> $a->{qend} || $b->{qhitlen} <=> $a->{qhitlen}  } @{$self->{blast_hits}}
+				@sorted_list =  sort  { $b->passes_thresholds() <=> $a->passes_thresholds() ||  $b->{qend} <=> $a->{qend} || $b->{qhitlen} <=> $a->{qhitlen}  } @{$self->{blast_hits}}
 			}
 			else
 			{
@@ -438,7 +438,7 @@ sub get_valid_contig_count
 	for my $flank ( @{$self->{dup_list}} )
 	{
 		my $blast = $flank->pick_best_blast();
-    	++$contig_count if ($blast->passes_pct_threshold());
+    	++$contig_count if ($blast->passes_thresholds());
 	}
 
    return $contig_count;
@@ -525,7 +525,7 @@ sub to_feat_mysql
 
 	my $annotated = 0;
 	my $blast = $self->pick_best_blast();
-	$annotated = 1 if (defined($blast) && $blast->passes_pct_threshold() );
+	$annotated = 1 if (defined($blast) && $blast->passes_thresholds() );
 
 	my $flank_pct_id = $self->{flank_pct_id} if ($self->{annotation_name} && $self->{annotation_name} eq $annotation);
 	$flank_pct_id = "NULL" unless $flank_pct_id;

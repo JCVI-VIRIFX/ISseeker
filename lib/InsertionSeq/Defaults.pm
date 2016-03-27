@@ -42,6 +42,7 @@ our @EXPORT_OK = qw(
 	$EXTRACTSEQ_PATH
     $DEFAULT_REQ_IS_PERCENT_ID
 	$DEFAULT_REQ_FLANK_PERCENT_ID
+	$DEFAULT_REQ_FLANK_LENGTH
 );
 require Exporter;
 }
@@ -56,6 +57,7 @@ our $FORMATDB_PATH;
 our $EXTRACTSEQ_PATH;
 our $DEFAULT_REQ_IS_PERCENT_ID;
 our $DEFAULT_REQ_FLANK_PERCENT_ID;
+our $DEFAULT_REQ_FLANK_LENGTH;
 
 
 sub Process
@@ -67,8 +69,6 @@ sub Process
         )
         ->getall();
 
-	
-
 	##
 	## Required
 	##
@@ -77,6 +77,7 @@ sub Process
 	$EXTRACTSEQ_PATH         		= $config{"EXTRACTSEQ_PATH"} || die "EXTRACTSEQ_PATH not set in config file $file!\n";
 	$DEFAULT_REQ_IS_PERCENT_ID		= $config{"DEFAULT_REQ_IS_PERCENT_ID"} || die "DEFAULT_REQ_IS_PERCENT_ID not set in config file $file!\n";
 	$DEFAULT_REQ_FLANK_PERCENT_ID	= $config{"DEFAULT_REQ_FLANK_PERCENT_ID"} || die "DEFAULT_REQ_FLANK_PERCENT_ID not set in config file $file!\n";
+	$DEFAULT_REQ_FLANK_LENGTH		= $config{"DEFAULT_REQ_FLANK_LENGTH"}; # || die "DEFAULT_REQ_FLANK_LENGTH not set in config file $file!\n";
 
 
 	\%config;

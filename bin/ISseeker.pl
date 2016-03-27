@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 
 #############################################################################
 #
@@ -59,6 +59,7 @@ use InsertionSeq::Defaults qw(
     $EXTRACTSEQ_PATH
     $DEFAULT_REQ_IS_PERCENT_ID
     $DEFAULT_REQ_FLANK_PERCENT_ID
+	$DEFAULT_REQ_FLANK_LENGTH
 );
 
 
@@ -318,7 +319,9 @@ sub main
 	my $is_name;
 	my $is_length;
 	my $is_req_pct;
+	my $is_req_len = 0;
 	my $flank_req_pct;
+	my $flank_req_len;
 	my %genomeSizeHash;
 	my %isSizeHash;
 	my $config_file = $DEFAULT_CONFIG_FILE;
@@ -328,13 +331,14 @@ sub main
 
 	#usage instructions for command line execution
 	my $usage =
-"USAGE: ./ISseeker.pl --genome <genome_fasta> --is <is_fstaile> --reference <reference_fasta> [--is_pct <float>] [--flank_pct <float>] [--out <output_dir>] [--config <config_file>] [--verbose] [--log <level>] [--help]\n"
+"USAGE: ./ISseeker.pl --genome <genome_fasta> --is <is_fastafile> --reference <reference_fasta> [--is_pct <float>] [--flank_pct <float>] [--out <output_dir>] [--config <config_file>] [--verbose] [--log <level>] [--help]\n"
 	  . "\t--genome: path to query genome sequence in FASTA format\n"
 	  . "\t--is: path to IS element sequence in FASTA format\n"
 	  . "\t--reference: basename of reference FASTA file (with corresponding _coords files for each entry)\n"
 	  . "\t--is_pct: percent ID cutoff for including an IS blast hit against a contig or the reference\n"
 	  . "\t--flank_pct: percent ID cutoff for including a flank blast hit against the reference\n"
-	  . "\t--dust: use blast low-complexity filter (T/F)\n"
+	  . "\t--flank_len: minimum match length cutoff for including a flank blast hit against the reference\n"
+	  . "\t--dust: use blast low-complexity filter (T/F). Default is F\n"
 	  . "\t--out: path to output files\n"
 	  . "\t--config: alternate config file with app locations\n"
 	  . "\t--log: logging level (0-3)\n"
@@ -347,6 +351,7 @@ sub main
 		"genome=s" 		=> \$genome_path,
 		"is_pct=f" 		=> \$is_req_pct,
 		"flank_pct=f"  	=> \$flank_req_pct,
+		"flank_len=f"  	=> \$flank_req_len,
 		"out=s" 		=> \$output_path,
 		"reference=s@" 	=> \@annot_fastas,
 		"log=i"  		=> \$log_level,
@@ -354,6 +359,10 @@ sub main
 		"dust=s"     	=> \$dust
 	);
 
+	##
+	## Dust defult is F (no dust)
+	##
+	$dustparam = "-F F" ;
 	if ($dust)
 	{
 		$dust = uc $dust;
@@ -365,6 +374,9 @@ sub main
 
 	$is_req_pct		= $DEFAULT_REQ_IS_PERCENT_ID unless(defined($is_req_pct));
 	$flank_req_pct	= $DEFAULT_REQ_FLANK_PERCENT_ID unless (defined($flank_req_pct));
+	$flank_req_len	= $DEFAULT_REQ_FLANK_LENGTH unless (defined($flank_req_len));
+print "DEFAULT_REQ_FLANK_LENGTH = $DEFAULT_REQ_FLANK_LENGTH\n";
+print "flank_req_len = $flank_req_len\n";
 
 	#set path to genome info file
 
@@ -396,8 +408,10 @@ sub main
 	my $param_string = "params:";
 	$param_string .= " -is_pct $is_req_pct" if defined(($is_req_pct));
 	$param_string .= " -flank_pct $flank_req_pct" if (defined($flank_req_pct));
+	$param_string .= " -flank_len $flank_req_len" if (defined($flank_req_len));
 	$param_string .= " -is $is_path";
 	$param_string .= " -genome $genome_path";
+	$param_string .= " $dustparam";
 	for my $outref (@annot_fastas)
 	{
 		$param_string .= " -reference $outref";
@@ -423,6 +437,7 @@ sub main
 	$log->info("Writing log output to $logfile_path\n");
 	$log->info("IS min percent    = $is_req_pct\n");
 	$log->info("Flank min percent = $flank_req_pct\n");
+	$log->info("Flank min length  = $flank_req_len\n");
 	
 	
 	if (@annot_fastas)
@@ -453,7 +468,7 @@ sub main
 	$log->debug("Running isfind on $genome_name for $is_path\n");
 
 	#blast the IS element against the genome
-	blast_is_genome( $is_name, $is_length, $is_path, $genome_path, $is_req_pct, $flank_req_pct );
+	blast_is_genome( $is_name, $is_length, $is_path, $genome_path, $is_req_pct, $is_req_len, $flank_req_pct, $flank_req_len );
 
 }
 
@@ -471,7 +486,9 @@ sub blast_is_genome()
 	my $is_path     	= shift(@_);
 	my $genome_path 	= shift(@_);
 	my $is_req_pct 		= shift(@_);
+	my $is_req_len 		= shift(@_);
 	my $flank_req_pct	= shift(@_);
+	my $flank_req_len	= shift(@_);
 
 	#local variable declare
 	my $hit;
@@ -483,7 +500,7 @@ sub blast_is_genome()
 	my $annotationISSQL = "";
 	for my $fasta (@annot_fastas)
     {
- 		my @annotationISHits =  blast_is_against_annotation( $is_name, $is_length, $is_path, $fasta, $is_req_pct );
+ 		my @annotationISHits =  blast_is_against_annotation( $is_name, $is_length, $is_path, $fasta, $is_req_pct, $is_req_len );
 
 		for my $anBlastHit (@annotationISHits)
 		{
@@ -554,6 +571,7 @@ sub blast_is_genome()
 			is_name   => $is_name,
 			pct_id    => $pct_id,
 			req_pct_id  => $is_req_pct,
+			req_len  => $is_req_len,
 			queryid   => $queryid,
 			qstart    => $qstart,
 			qend      => $qend,
@@ -619,7 +637,7 @@ sub blast_is_genome()
 			{
 				$col1 .= "*";
 			}
-			if ($hit->passes_pct_threshold())
+			if ($hit->passes_thresholds())
 			{
 				$col1 .= " ";
 			}
@@ -638,7 +656,7 @@ sub blast_is_genome()
 			$col7 = "(size=$tmplen)";
 			
 
-			if ($hit->is_annotatable() && $hit->passes_pct_threshold())
+			if ($hit->is_annotatable() && $hit->passes_thresholds())
 			{
 				##
 				## TODO = mate 2 flanks from the same contig automatically
@@ -685,7 +703,7 @@ sub blast_is_genome()
 			#for my $annotation (@annotations)
 			for my $annotation (@annot_fastas)
 			{	
-				blastAnnotation ($TMP_EXTRACTION_FILE, $flank, $annotation, $flank_req_pct  );
+				blastAnnotation ($TMP_EXTRACTION_FILE, $flank, $annotation, $flank_req_pct, $flank_req_len  );
 			}
 		}
 	}
@@ -695,7 +713,7 @@ sub blast_is_genome()
 	}
 	
 	$log->info("\nANNOTATION-BLASTED FLANKS:\n");
-	$log->info("+ = Rejected/Failed Pct ID threshold\n\n");
+	$log->info("+ = Rejected/Failed Pct ID or Match Length threshold\n\n");
 	#$log->info("name contig_dir flank_loc annot_dir closest_base annotation\n");
 
 	my $maxSidLen = 10;
@@ -705,19 +723,21 @@ sub blast_is_genome()
        	$maxSidLen = length($flank->get_sid_name()) if (length($flank->get_sid_name()) > $maxSidLen);
 	}
 
-    $log->info(sprintf("%-3s %-".$maxSidLen."s   %6s%%   %-5s %-5s %-5s  %-20s   %-35s\n",
-			"  ", "Contig Name", "PctID", "CDir", "FType", "FDir", "Closest Base", "Annotation"));
+    $log->info(sprintf("%-3s %-".$maxSidLen."s   %6s%%   %3s    %-5s %-5s %-5s  %-20s   %-35s\n",
+			"  ", "Contig Name", "PctID", "Len", "CDir", "FType", "FDir", "Closest Base", "Annotation"));
+    #$log->info(sprintf("%-3s %-".$maxSidLen."s   %6s%%   %-5s %-5s %-5s  %-20s   %-35s\n",
+            #"  ", "Contig Name", "PctID", "CDir", "FType", "FDir", "Closest Base", "Annotation"));
 	for my $flank (@flanks)
 	{
 		my $best = $flank->pick_best_blast();
    		my $reject = " ";
-	    $reject = "+" unless ($best && $best->passes_pct_threshold());
+	    $reject = "+" unless ($best && $best->passes_thresholds());
 
 		my $logString = sprintf("%-3s %-".$maxSidLen."s   ",$reject, $flank->get_sid_name());
 		if (defined($best))
 		{
-			$logString .= sprintf("%6s%%   %-5s %-5s %-5s  %-20s   %-35s\n",
-				 $best->get_pct_id(), $flank->{contig_direction}, $flank->{location}, $best->{sdir},$best->closest_is_base(),$flank->{annotation_name});
+			$logString .= sprintf("%6s%%   %3s    %-5s %-5s %-5s  %-20s   %-35s\n",
+				 $best->get_pct_id(), $best->get_matchlen(), $flank->{contig_direction}, $flank->{location}, $best->{sdir},$best->closest_is_base(),$flank->{annotation_name});
 		}
 		else
 		{
@@ -733,7 +753,7 @@ sub blast_is_genome()
 	for my $flank (@flanks)
 	{
 		my $blast = $flank->pick_best_blast();
-		if (!defined($blast) || ! $blast->passes_pct_threshold())
+		if (!defined($blast) || ! $blast->passes_thresholds())
 		{
 			push @bad_flanks, $flank ;
 		}
@@ -892,8 +912,10 @@ sub blast_is_genome()
 	{
 		my $best = $flank->pick_best_blast();
 		my $pct = "0";
+		my $match = "0";
 		$pct = $best->get_pct_id() if ($best);
-		$log->info(sprintf("%-40s %6s%% %-20s %-20s %-15s\n", $flank->{contig_name}, $pct, "($flank->{contig_lower_coord}-$flank->{contig_upper_coord})", "Orientation: $flank->{contig_direction}", "Begin/End: $flank->{location}"));
+		$match = $best->get_matchlen() if ($best);
+		$log->info(sprintf("%-40s %6s%% %3s %-20s %-20s %-15s\n", $flank->{contig_name}, $pct, $match, "($flank->{contig_lower_coord}-$flank->{contig_upper_coord})", "Orientation: $flank->{contig_direction}", "Begin/End: $flank->{location}"));
 	}
 	$log->info("<NONE>\n") if (-1 == $#bad_flanks);
 	$log->info("\n");
@@ -1074,6 +1096,7 @@ sub blastAnnotation
 	my $flank = shift;
 	my $annotation_fasta = shift;
 	my $flank_req_pct = shift;
+	my $flank_req_len = shift;
 	
 	$log->debug("Blast $flank->{contig_direction} $flank->{contig_name} \n");
 	
@@ -1141,6 +1164,7 @@ sub blastAnnotation
 			is_name   => $flank->{is_name},
 			pct_id    => $pct_id,
             req_pct_id  => $flank_req_pct,
+            req_len  => $flank_req_len,
 			queryid   => $queryid,
 			qstart    => $qstart,
 			qend      => $qend,
@@ -1170,6 +1194,7 @@ sub blast_is_against_annotation()
     my $is_path    		 	= shift(@_);
     my $annot_fasta_path  	= shift(@_);
     my $is_req_pct			= shift(@_);
+    my $is_req_len			= shift(@_);
 
     my %genomeSizeHash = sizeFasta($annot_fasta_path);
 
@@ -1221,6 +1246,7 @@ sub blast_is_against_annotation()
            	is_name   	=> $is_name,
    			pct_id    	=> $pct_id,
    			req_pct_id	=> $is_req_pct,
+   			req_len	=> $is_req_len,
            	queryid   	=> $queryid,
            	qstart    	=> $qstart,
            	qend      	=> $qend,
@@ -1243,7 +1269,7 @@ sub blast_is_against_annotation()
 	my $valid_hit_count = 0;
 	for my $hit_check (@annotationList)
 	{
-    	$valid_hit_count++ if ($hit_check->passes_pct_threshold());
+    	$valid_hit_count++ if ($hit_check->passes_thresholds());
 	}
 
 	my $hitInfo =       "IS annotation hits      : ";

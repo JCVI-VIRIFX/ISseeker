@@ -49,6 +49,7 @@ Optional Arguments
 
 —is_pct <float> - Minimum ID % to accept an IS blast to a contig or annotation blast hit (default is 97.0 in the config file)
 —flank_pct <float> - Minimum ID % to accept a flank blast to an annotated FASTA (default is 97.0 in the config file)
+—flank_len <int> - Minimum match length to accept a flank blast to an annotated FASTA (default is 0 in the config file)
 —output <output_dir> - Directory in which to save log files and MySql output. Default is “output”.
 
 The name on the def line in the annotation file will be used as the annotation's "tag" in the system. If it is in the NCBI form:

@@ -32,6 +32,7 @@ package InsertionSeq::BlastHit;
 use strict;
 
 use Log::Log4perl;
+use List::Util qw[min max];
 
 ##
 ## Make getters and setters for our members
@@ -43,6 +44,7 @@ use base qw(Class::Accessor);
     is_name    
     pct_id     
     req_pct_id 
+    req_len 
     queryid    
     qstart     
     qend       
@@ -53,6 +55,7 @@ use base qw(Class::Accessor);
     slength    
     name       
     filename   
+	matchlen
 ));
 
 
@@ -84,6 +87,7 @@ sub new
 	die ("BlastHit missing query name.\n") if ( !defined($self->{q_name}) );
 	die ("BlastHit missing file name.\n") if ( !defined($self->{filename}) );
 
+ 
 	$self->initialize();
 
     return $self;
@@ -113,6 +117,7 @@ sub initialize
 
 	$self->{shitlength} =  ($self->{send} - $self->{sstart} ) + 1;
 	$self->{qhitlength} =  ($self->{qend} - $self->{qstart}) + 1;
+	$self->{matchlen} = min( $self->{shitlength}, $self->{qhitlength} );
 
 }
 
@@ -126,10 +131,10 @@ sub type {
 }
 
 
-sub passes_pct_threshold
+sub passes_thresholds
 {
 	my $self = shift;
-	return $self->get_pct_id() >= $self->get_req_pct_id();
+	return ($self->get_pct_id() >= $self->get_req_pct_id() && $self->get_matchlen() >= $self->get_req_len());
 }
 
 sub passes_pct_threshold_sort
