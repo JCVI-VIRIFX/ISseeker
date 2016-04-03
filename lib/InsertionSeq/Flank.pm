@@ -337,6 +337,7 @@ sub pick_best_blast
 			$self->{annotation_name} = $best->{annotation}->{name};
 			$self->{closest_is_base} = $best->closest_is_base();
 			$self->{flank_pct_id} = $best->{pct_id};
+			$self->{matchlen} = $best->{matchlen};
 		}
 
 	}
@@ -553,22 +554,16 @@ sub to_feat_mysql
 }
 
 ##our $CSV_HEADER = "is_element, reference, q_genome, s_genome, contig_name, feat_type, flank_begin_end, orientation, begin_base, end_base, is_annotated, (flank) is_element, reference, q_genome, begin_end, orientation, nearest_base, after_gene, in_gene, before_gene, match_quality, flank_separation, mate_flank_id, contig_count\n";
-our $CSV_HEADER = "is_element, genome, contig_name, feat_type, flank_begin_end, orientation, contig_flank_begin_base, contig_flank_end_base, is_annotated, reference, orientation, nearest_base, after_gene, in_gene, before_gene, match_quality, flank_separation, mate_flank_id, contig_count\n";
+our $CSV_HEADER = "type, id, mate_id, offset_from_previous, is_element, genome, contig_name, %_id, match_len, feat_type, flank_begin_end, orientation, contig_flank_begin_base, contig_flank_end_base, is_annotated, reference, nearest_base, after_gene, in_gene, before_gene, match_quality, contig_count\n";
 
 sub to_csv
 {
 
 	my $self = shift;
-	my $end_flank_distance = shift;
-	my $end_flank_id = shift;
 	my $source_genome = shift;
 
-
 	my $annotated = 0;
-	$annotated = 1 if (defined($self->pick_best_blast()));
 
-
-	my $blast = $self->pick_best_blast();
 	
 	my $csv = "";
     my $geneBeforeCsv = "";
@@ -579,12 +574,15 @@ sub to_csv
 		my $contig_count = 1; ## 1 for me
 		$contig_count  += scalar(@{$self->{dup_list}}) if ($self->{dup_list});
 
-   	my $annotation_name = $self->{annotation_name} if ($self->{annotation_name});
+   	my $annotation_name = "";
+   	$annotation_name = $self->{annotation_name} if ($self->{annotation_name});
 
+	my $blast = $self->pick_best_blast();
 	if (defined($blast))
 	{
+		$annotated = 1 if($blast->passes_thresholds());
     	$blastType = $blast->{type};
-		if ($blast->{annotation})
+		if ($blast->{annotation} && $blast->passes_thresholds())
 		{
 	    	my  ($geneBefore,$gene,$geneAfter) = $blast->{annotation}->locate_base($blast->{closest_is_base});
     		$geneBeforeCsv = $geneBefore->{accession} if defined($geneBefore);
@@ -594,12 +592,18 @@ sub to_csv
 	}
 
 
+		$csv .= "$self->{id},";
+		$csv .= "$self->{mate}->{id}" if ($self->{mate});
+		$csv .= ",";
+		$csv .= "$self->{offset_from_last},";
 		$csv .= "$self->{is_name},";
         $csv .= "$source_genome,";
         $csv .= "$self->{contig_name},";
+		$csv .= "$self->{flank_pct_id},";
+		$csv .= "$self->{matchlen},";
         $csv .= "$SQL_FLANK_FEAT_TYPE,";
         $csv .= "$self->{is_location},";
-        $csv .= "$self->{contig_direction},";
+		$csv .= "$self->{direction},";
         $csv .= "$self->{contig_lower_coord},";
         $csv .= "$self->{contig_upper_coord},";
         $csv .= "$annotated,";
@@ -609,14 +613,11 @@ sub to_csv
 		$csv .= "$annotation_name,";
 		#$csv .= "$source_genome,";
 		#$csv .= "$self->{is_location},";
-		$csv .= "$self->{direction},";
 		$csv .= "$self->{closest_is_base},";
 		$csv .= "$geneBeforeCsv,",
 		$csv .= "$geneInCsv,";
 		$csv .= "$geneAfterCsv,";
 		$csv .= "$blastType,";
-		$csv .= "$end_flank_distance,";
-		$csv .= "$end_flank_id,";
 		$csv .= "$contig_count";
 		$csv .= "\n";
 	

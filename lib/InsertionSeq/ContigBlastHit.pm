@@ -401,7 +401,7 @@ sub to_feat_mysql
 	}
 	else
 	{
-    	$log->logdie("Illegal Contig Blast Hit type sent to routine to_feat_mysql() for contig $self->{name}: $self->{type}\n");
+    	$log->error("Illegal Contig Blast Hit type sent to routine to_feat_mysql() for contig $self->{name}: $self->{type}\n");
 	}
 
     $sql;
@@ -410,23 +410,25 @@ sub to_feat_mysql
 }
 
 
+##our $CSV_HEADER = "id, mate_id, offset_from_previous, is_element, genome, contig_name, %_id, match_len, feat_type, flank_begin_end, orientation, contig_flank_begin_base, contig_flank_end_base, is_annotated, reference, nearest_base, after_gene, in_gene, before_gene, match_quality, contig_count\n";
 sub to_csv
 {
     my $self = shift;
-    my $q_genome = shift;
-    my $s_genome = shift;
-    my $reference = shift;
+    my $genome = shift;
 
 
 	my $csv;
-	if ($self->{type} eq $TYPE_ENTIRE || $self->{type} eq $TYPE_EMBED)
+	if ($self->{type} eq $TYPE_ENTIRE || $self->{type} eq $TYPE_EMBED || $self->{type} eq $TYPE_EMBED_TRUNC)
 	{
+		$csv .= "$self->{id},";
+		$csv .= ","; 			# No mate
+		$csv .= ","; 			# No offset
         $csv .= "$self->{is_name},";
-        $csv .= "$reference,";
-        $csv .= "$q_genome,";
-        $csv .= "$s_genome,";
-        $csv .= "$self->{name},";
-        $csv .= "E,";
+        $csv .= "$genome,";
+        $csv .= ",";
+		$csv .= "$self->{pct_id},";
+		$csv .= "$self->{matchlen},";
+        $csv .= "$self->{type},";
         $csv .= "X,";
         $csv .= "$self->{sdir},";
         $csv .= "$self->{sstart},";

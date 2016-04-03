@@ -120,7 +120,7 @@ sub init_logging
 		"log4perl.appender.Logfile.filename= $logfile_path\n".
 		"log4perl.appender.Logfile.mode=write\n".
 		"log4perl.appender.Logfile.layout=PatternLayout\n".
-		"log4perl.appender.Logfile.layout.ConversionPattern=[%d] %m\n".
+		"log4perl.appender.Logfile.layout.ConversionPattern=%m\n".
 		"log4perl.appender.Logfile.Threshold=DEBUG\n".
 	
 		"log4perl.appender.Screen         = Log::Log4perl::Appender::Screen\n".
@@ -498,9 +498,12 @@ sub blast_is_genome()
 	$log->info( "Processing IS $is_name SIZE $is_length\n" );
 
 	my $annotationISSQL = "";
+ 	my @allAnnotationISHits;
 	for my $fasta (@annot_fastas)
     {
  		my @annotationISHits =  blast_is_against_annotation( $is_name, $is_length, $is_path, $fasta, $is_req_pct, $is_req_len );
+
+		push(@allAnnotationISHits, @annotationISHits);
 
 		for my $anBlastHit (@annotationISHits)
 		{
@@ -509,7 +512,7 @@ sub blast_is_genome()
 			## Match target name to which annotation we hit
 			##
 			my $annotation = $annotationHash{$anBlastHit->{name}};
-			$log->logdie("Error - cannot match annotataion blast target name $anBlastHit->{name} in list of annotations!\n\n") unless ($annotation);
+			$log->logdie("Error - cannot match annotation blast target name $anBlastHit->{name} in list of annotations!\n\n") unless ($annotation);
 			##
 			## Store entire IS seqs found
 			##
@@ -529,6 +532,7 @@ sub blast_is_genome()
 	my $command = "$BLASTALL_PATH -p blastn -d $genome_path -e .01 -m 8 $dustparam -i $is_path";
 	$log->info("$command\n");
 	my $blastout = `$command`;
+	$log->logdie("Error ${^CHILD_ERROR_NATIVE} returned from command: $command.\n\n") if (${^CHILD_ERROR_NATIVE});
 	$log->info("RAW BLAST OUTPUT:\n");
 	$log->info("queryid\t\tsubjectid\t%id\tmatch\tmis\tgaps\tqstart\tqend\tsstart\tsend\te\tbit\n");
 	$log->info("$blastout");
@@ -698,7 +702,7 @@ sub blast_is_genome()
 			my $command = "$EXTRACTSEQ_PATH $genome_path:$flank->{contig_name} -regions $flank->{contig_lower_coord}-$flank->{contig_upper_coord} -out $TMP_EXTRACTION_FILE -sid1 ".$flank->get_sid_name();
 			$log->debug("$command\n");
 			my $result = system("$command 2>/dev/null");
-			$log->logdie ("Error $result while running: $command\n") if ($result);
+			$log->logdie("Error $result returned from command: $command.\n\n") if ($result);
 			## Blast here
 			#for my $annotation (@annotations)
 			for my $annotation (@annot_fastas)
@@ -1059,9 +1063,19 @@ sub blast_is_genome()
 	print SQL $cleanSQL;
 	close SQL;
 
-	my $make_csv_file = 0;
+	my $make_csv_file = 1;
+	my $flankid = 1;
 	if ($make_csv_file)
 	{
+		for my $flank (@good_flanks)
+		{
+			$flank->{id} = $flankid++;
+		}
+    	for my $flank (@bad_flanks)
+    	{
+			$flank->{id} = $flankid++;
+		}
+
 		my $csv_file_path = "$output_path/ISseeker-$genome_name-$is_name$anno_file_ext.csv";
     	$log->info("Writing CSV file $csv_file_path\n");
     	open CSV, "> $csv_file_path" || $log->logdie ("Cannot open CSV file $sqlfile_path\n");
@@ -1071,14 +1085,25 @@ sub blast_is_genome()
 		{
 			my $flank_distance = "";
 			$flank_distance = abs ($flank->{closest_is_base} - $flank->{mate}->{closest_is_base} ) if (defined($flank->{mate}));
-			print CSV $flank->to_csv($flank_distance,"",$source_genome);
+			print CSV "Flank,";
+			print CSV $flank->to_csv($source_genome);
 		}
 
 
     	for my $flank (@bad_flanks)
     	{
-			print CSV $flank->to_csv("","",$source_genome);
+			print CSV "Flank,";
+			print CSV $flank->to_csv($source_genome);
    		}
+
+		for my $isBlastHit (@allAnnotationISHits)
+		{
+            $isBlastHit->{id} = $flankid++;
+			my $annotationName = "";
+			$annotationName = $isBlastHit->{name} if ($isBlastHit->{name});
+			print CSV "IS,";
+		   	print CSV $isBlastHit->to_csv($annotationName);
+		}
 
 
 		close CSV;
@@ -1104,6 +1129,7 @@ sub blastAnnotation
 	$log->debug("$command\n");
 	
 	my $blastout = `$command`;
+	$log->logdie("Error ${^CHILD_ERROR_NATIVE} returned from command: $command.\n\n") if (${^CHILD_ERROR_NATIVE});
 	$log->info("$blastout");
 	
 	my @blastout = split( /\n/, $blastout );
@@ -1207,6 +1233,7 @@ sub blast_is_against_annotation()
     my $command = "$BLASTALL_PATH -p blastn -d $annot_fasta_path -e .0000000001 -m 8 $dustparam -i $is_path";
     $log->info("$command\n");
     my $blastout = `$command`;
+	$log->logdie("Error ${^CHILD_ERROR_NATIVE} returned from command: $command.\n\n") if (${^CHILD_ERROR_NATIVE});
     $log->info("IS vs. ANNOTATION BLAST OUTPUT (pct id cutoff = $is_req_pct):\n");
     $log->info("queryid\t\tsubjectid\t%id\tmatch\tmis\tgaps\tqstart\tqend\tsstart\tsend\te\tbit\n");
     $log->info("$blastout");

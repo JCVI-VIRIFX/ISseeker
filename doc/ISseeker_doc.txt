@@ -69,7 +69,7 @@ The results will be printed to the screen, and these files placed in the output 
 
 ISseeker-UH02-ISAba1-log.txt  (log of the results printed to the screen)
 ISseeker-UH02-ISAba1.sql   (database file suitable for importing into MySQL)
-
+ISseeker-UH02-ISAba1.csv   (CSV file of flanks and direct IS blast results)
 
 
 
