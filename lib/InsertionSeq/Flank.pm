@@ -111,7 +111,7 @@ sub new
 		##
 		## Remove pipes from contig name
 		##
-		if ($self->{contig_name} =~ /(gb|ref)\|(\w+\.\w+)/)
+		if ($self->{contig_name} =~ /(gb|ref|emb|dbj)\|(\w+\.\w+)/)
 		{
 			##
 			## opt for full accession first
@@ -119,17 +119,17 @@ sub new
 			#$log->info("Extracting short name $2 from $self->{contig_name} \n");
 			$self->{contig_name} = $2;
 		}
-		elsif ($self->{contig_name} =~ /(gb|ref)\|(\w+)/)
+		elsif ($self->{contig_name} =~ /(gb|ref|emb|dbj)\|(\w+)/)
 		{
 			##
-			## opt for accession 
+			## opt for accession
 			##
 			#$log->info("Extracting short name $2 from $self->{contig_name} \n");
 			$self->{contig_name} = $2;
 		}
 		elsif ($self->{contig_name} =~ /gi\|(\w+)/)
 		{
-			## 
+			##
 			## Or take GI
 			##
 			#$log->info("Extracting short name $1 from $self->{contig_name} \n");
@@ -249,7 +249,7 @@ sub add_blast_hit
 ##
 ## Find the blast closest to the end of the flank adjacent to the IS
 ## There's probably a slicker way to do this, but it seems clearer to me
-## to just break out the cases 
+## to just break out the cases
 ##
 sub pick_best_blast
 {
@@ -376,6 +376,7 @@ sub is_mate_of
 {
 	my $self = shift;
 	my $other = shift;
+	my $referenceISHits = shift; # array reference for array of blast hits of the IS element to the reference genome(s)
 
 
 	##
@@ -383,9 +384,14 @@ sub is_mate_of
 	##
 	return 0 if ($self->{annotation_name} ne $other->{annotation_name});
 
-
+	#my $self_base = $self->closest_is_base();
+	#my $other_base = $other->closest_is_base();
+	#print STDERR "is_mate_of: self:$self->{direction}:$self->{is_location}:$self_base other:$other->{direction}:$other->{is_location}:$other_base\n";
+	# Check for flanks which overlap by a small amount indicating that there is an IS insertion where a short part of the
+	# reference genome is duplicated
 	if ($self->{direction} eq $DIRECTION_REV && $other->{direction} eq $DIRECTION_REV)
 	{
+		return 1 if (abs($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE); #Currently have BEGIN/END LOCATION constraint turned off
 		## Begin will be 15 bases toward 3' end from End
 		#return 1 if ($self->{is_location} eq $LOCATION_BEGIN && $self->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
 		#return 1 if ($other->{is_location} eq $LOCATION_BEGIN && $other->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
@@ -402,6 +408,7 @@ sub is_mate_of
 	}
 	elsif ($self->{direction} eq $DIRECTION_FWD && $other->{direction} eq $DIRECTION_FWD)
 	{
+		return 1 if (abs($self->closest_is_base() - $other->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE); #Currently have BEGIN/END LOCATION constraint turned off
 		## End will be 15 bases toward 3' end from Begin
 		#return 1 if ($self->{is_location} eq $LOCATION_END && $self->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
 		#return 1 if ($other->{is_location} eq $LOCATION_END && $other->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
@@ -416,6 +423,19 @@ sub is_mate_of
 				&& $other->closest_is_base() > $self->closest_is_base()
 				&& ($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
 	}
+	# Now check to see if the reference genome has the same insertion sequence at this location
+	# By the sorting before invocation $other->closets_is_base should be be less than $self->closest_is_base but let's be sure
+	my $start = $other->closest_is_base();
+	my $end = $self->closest_is_base();
+	if ($start > $end) {
+		my $tmp = $start;
+		$start = $end;
+		$end = $tmp;
+	}
+	# check if these coordinates correspond to an IS element
+	if (InsertionSeq::ContigBlastHit->check_reference_for_IS($self->{annotation_name}, $start, $end, $referenceISHits)) {
+		return 2;
+	}
 
 
 	return 0;
@@ -425,9 +445,12 @@ sub mate_with
 {
 	my $self = shift;
 	my $other = shift;
+	my $mate_type = shift;
 
 	$other->{mate} = $self;
 	$self->{mate} = $other;
+	$other->{mate_type} = $mate_type;
+	$self->{mate_type} = $mate_type;
 }
 
 

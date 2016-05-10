@@ -238,7 +238,7 @@ sub readAnnotations
 
 		formatDB($fastaFile);
 
-		## Extract targets from file				
+		## Extract targets from file
 		my $reader=new Bio::SeqIO(-format=>'fasta',-file=>$fastaFile);
 		while (my $seqRec=$reader->next_seq)
 		{
@@ -292,7 +292,7 @@ sub readAnnotations
 					fasta_filename => $fastaFile
 			);
 
-			## Print gene stats	
+			## Print gene stats
 			my $annotSize = @{$annotation->{genelist}};
 			$log->info("$annotation->{name} : $annotSize unique genes.\n");
 			$log->logdie ("Error reading annotation file: no genes!\n") if ($annotSize <= 0);
@@ -682,7 +682,7 @@ sub blast_is_genome()
 				#{
 				#$logMessage .=" [Auto-pairing flanks from same IS in same contig.] ";
 				#$beginFlank->mate_with($endFlank);
-				#}	
+				#}
 			}
 			my $logMessage = sprintf("%-3s %-".$maxSubWidth."s   %6s%%   %-11s   %6s   %-30s   %-10s   %-30s", $col1, $col2, $col3, $col4, $col5, $col6, $col7, $col8);
 			$log->info($logMessage."\n");
@@ -784,7 +784,7 @@ sub blast_is_genome()
 	}  @good_flanks ;
 
 	##
-	## Calculate offsets from previous flank			 		
+	## Calculate offsets from previous flank
 	##
 	my $basesDiff = "";
 	my $lastAnnot = "";
@@ -835,13 +835,14 @@ sub blast_is_genome()
 	my $lastFlank;
 	for my $flank (@good_flanks)
 	{
+		my $mate_type;
 		if (!$flank->{flank_dup}
 				&& defined($lastFlank)
 				&& !defined($flank->{mate})
 				&& !defined($lastFlank->{mate})
-				&& $flank->is_mate_of($lastFlank))
+				&& ($mate_type = $flank->is_mate_of($lastFlank, \@allAnnotationISHits)))
 		{
-			$flank->mate_with($lastFlank);
+			$flank->mate_with($lastFlank, $mate_type);
 		}
 
 		$lastFlank = $flank;
@@ -874,17 +875,13 @@ sub blast_is_genome()
 
 		$flank_desc_line .= "*DUP* " if ($flank->{flank_dup});
 		if ( defined($flank->{mate})
-				&& (   ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_FWD && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_BEGIN)
-				|| ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_REV && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
-		)
+				&& ($flank->closest_is_base() < $flank->{mate}->closest_is_base())
 		)
 		{
 			$flank_desc_line .= "  _/--";
 		}
 		elsif (defined($flank->{mate})
-				&& (($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_REV && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_BEGIN)
-				|| ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_FWD && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
-		)
+				&& ($flank->closest_is_base() >= $flank->{mate}->closest_is_base())
 		)
 		{
 			$flank_desc_line .= "   \\--";
@@ -893,6 +890,26 @@ sub blast_is_genome()
 		{
 			$flank_desc_line .= "      " unless ($flank->{flank_dup});
 		}
+		#		if ( defined($flank->{mate})
+		#			&& (   ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_FWD && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_BEGIN)
+		#				|| ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_REV && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
+		#				)
+		#		)
+		#		{
+		#			$flank_desc_line .= ($flank->{mate_type} == 1) ? "  _/--" : "   \\--";
+		#		}
+		#		elsif (defined($flank->{mate})
+		#			&& (($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_REV && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_BEGIN)
+		#				|| ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_FWD && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
+		#				)
+		#				)
+		#		{
+		#			$flank_desc_line .= ($flank->{mate_type} == 1) ? "   \\--" : "  _/--";
+		#		}
+		#		else
+		#		{
+		#	   		$flank_desc_line .= "      " unless ($flank->{flank_dup});
+		#		}
 
 		$flank_desc_line .= "$flank->{annotation_name} $flank->{direction} $flank->{location} ".$best->type()." ";
 
@@ -904,7 +921,7 @@ sub blast_is_genome()
 
 		$flank_desc_line .= " (".scalar(@{$flank->{dup_list}})." duplicates) " if ($flank->{dup_list});
 
-		## Redundant with the left side ** DUP ** 
+		## Redundant with the left side ** DUP **
 		##$flank_desc_line .= " ***** FLANK DUPLICATE ***** " if ($flank->{flank_dup});
 
 		$log->info("$flank_desc_line\n");
@@ -982,7 +999,7 @@ sub blast_is_genome()
 		if (!$flank->{flank_dup})
 		{
 			##
-			## Only ENDS 
+			## Only ENDS
 			##
 			if ($flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
 			{
