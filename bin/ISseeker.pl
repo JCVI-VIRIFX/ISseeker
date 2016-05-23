@@ -54,13 +54,13 @@ use InsertionSeq::Annotation;
 use InsertionSeq::Flank;
 
 use InsertionSeq::Defaults qw(
-		$BLASTALL_PATH
-		$FORMATDB_PATH
-		$EXTRACTSEQ_PATH
-		$DEFAULT_REQ_IS_PERCENT_ID
-		$DEFAULT_REQ_FLANK_PERCENT_ID
-		$DEFAULT_REQ_FLANK_LENGTH
-		);
+	$BLASTALL_PATH
+	$FORMATDB_PATH
+	$EXTRACTSEQ_PATH
+	$DEFAULT_REQ_IS_PERCENT_ID
+	$DEFAULT_REQ_FLANK_PERCENT_ID
+	$DEFAULT_REQ_FLANK_LENGTH
+	);
 
 
 my $DEFAULT_CONFIG_FILE = (dirname abs_path $0)."/ISseeker.cfg";
@@ -74,10 +74,10 @@ my $loglevel;
 my $log;
 
 my @annotation_file_extentions = (
-		".coords.csv",
-		".csv",
-		"_coords.csv",
-		".ptt",
+	".coords.csv",
+	".csv",
+	"_coords.csv",
+	".ptt",
 );
 
 #global variables
@@ -85,12 +85,12 @@ use vars qw($is_path $dustparam $genome_path $log_level $log_path $genome_name @
 
 
 my %LOG_LEVELS =
-		(
-				0 => "WARN",
-				1 => "INFO",
-				2 => "DEBUG",
-				3 => "TRACE"
-		);
+	(
+		0 => "WARN",
+		1 => "INFO",
+		2 => "DEBUG",
+		3 => "TRACE"
+	);
 
 
 
@@ -113,21 +113,21 @@ sub init_logging
 	}
 
 	my $conf =
-			"log4perl.rootLogger=$loglevel,Logfile,Screen\n".
+		"log4perl.rootLogger=$loglevel,Logfile,Screen\n".
 
 
-					"log4perl.appender.Logfile=Log::Log4perl::Appender::File\n".
-					"log4perl.appender.Logfile.filename= $logfile_path\n".
-					"log4perl.appender.Logfile.mode=write\n".
-					"log4perl.appender.Logfile.layout=PatternLayout\n".
-					"log4perl.appender.Logfile.layout.ConversionPattern=%m\n".
-					"log4perl.appender.Logfile.Threshold=DEBUG\n".
+			"log4perl.appender.Logfile=Log::Log4perl::Appender::File\n".
+			"log4perl.appender.Logfile.filename= $logfile_path\n".
+			"log4perl.appender.Logfile.mode=write\n".
+			"log4perl.appender.Logfile.layout=PatternLayout\n".
+			"log4perl.appender.Logfile.layout.ConversionPattern=%m\n".
+			"log4perl.appender.Logfile.Threshold=DEBUG\n".
 
-					"log4perl.appender.Screen         = Log::Log4perl::Appender::Screen\n".
-					"log4perl.appender.Screen.stderr  = 0\n".
-					"log4perl.appender.Screen.layout=PatternLayout\n".
-					"log4perl.appender.Screen.layout.ConversionPattern=%m\n".
-					"log4perl.appender.Screen.Threshold=DEBUG\n";
+			"log4perl.appender.Screen         = Log::Log4perl::Appender::Screen\n".
+			"log4perl.appender.Screen.stderr  = 0\n".
+			"log4perl.appender.Screen.layout=PatternLayout\n".
+			"log4perl.appender.Screen.layout.ConversionPattern=%m\n".
+			"log4perl.appender.Screen.Threshold=DEBUG\n";
 
 
 
@@ -238,7 +238,7 @@ sub readAnnotations
 
 		formatDB($fastaFile);
 
-		## Extract targets from file				
+		## Extract targets from file
 		my $reader=new Bio::SeqIO(-format=>'fasta',-file=>$fastaFile);
 		while (my $seqRec=$reader->next_seq)
 		{
@@ -286,13 +286,13 @@ sub readAnnotations
 			## Make the annotation and add it to the list
 			##
 			my $annotation = InsertionSeq::Annotation->new(
-					name => $targetName,
-					type => $type,
-					filename => $annotationFile,
-					fasta_filename => $fastaFile
+				name => $targetName,
+				type => $type,
+				filename => $annotationFile,
+				fasta_filename => $fastaFile
 			);
 
-			## Print gene stats	
+			## Print gene stats
 			my $annotSize = @{$annotation->{genelist}};
 			$log->info("$annotation->{name} : $annotSize unique genes.\n");
 			$log->logdie ("Error reading annotation file: no genes!\n") if ($annotSize <= 0);
@@ -331,32 +331,32 @@ sub main
 
 	#usage instructions for command line execution
 	my $usage =
-			"USAGE: ./ISseeker.pl --genome <genome_fasta> --is <is_fastafile> --reference <reference_fasta> [--is_pct <float>] [--flank_pct <float>] [--out <output_dir>] [--config <config_file>] [--verbose] [--log <level>] [--help]\n"
-					. "\t--genome: path to query genome sequence in FASTA format\n"
-					. "\t--is: path to IS element sequence in FASTA format\n"
-					. "\t--reference: basename of reference FASTA file (with corresponding _coords files for each entry)\n"
-					. "\t--is_pct: percent ID cutoff for including an IS blast hit against a contig or the reference\n"
-					. "\t--flank_pct: percent ID cutoff for including a flank blast hit against the reference\n"
-					. "\t--flank_len: minimum match length cutoff for including a flank blast hit against the reference\n"
-					. "\t--dust: use blast low-complexity filter (T/F). Default is F\n"
-					. "\t--out: path to output files\n"
-					. "\t--config: alternate config file with app locations\n"
-					. "\t--log: logging level (0-3)\n"
-					. "\t--help: print this usage statement\n";
+		"USAGE: ./ISseeker.pl --genome <genome_fasta> --is <is_fastafile> --reference <reference_fasta> [--is_pct <float>] [--flank_pct <float>] [--out <output_dir>] [--config <config_file>] [--verbose] [--log <level>] [--help]\n"
+			. "\t--genome: path to query genome sequence in FASTA format\n"
+			. "\t--is: path to IS element sequence in FASTA format\n"
+			. "\t--reference: basename of reference FASTA file (with corresponding _coords files for each entry)\n"
+			. "\t--is_pct: percent ID cutoff for including an IS blast hit against a contig or the reference\n"
+			. "\t--flank_pct: percent ID cutoff for including a flank blast hit against the reference\n"
+			. "\t--flank_len: minimum match length cutoff for including a flank blast hit against the reference\n"
+			. "\t--dust: use blast low-complexity filter (T/F). Default is F\n"
+			. "\t--out: path to output files\n"
+			. "\t--config: alternate config file with app locations\n"
+			. "\t--log: logging level (0-3)\n"
+			. "\t--help: print this usage statement\n";
 
 	#read command line options for path to sequences and annotation behavior
 	exit unless GetOptions(
-			"help"     		=> \$help,
-			"is=s"     		=> \$is_path,
-			"genome=s" 		=> \$genome_path,
-			"is_pct=f" 		=> \$is_req_pct,
-			"flank_pct=f"  	=> \$flank_req_pct,
-			"flank_len=f"  	=> \$flank_req_len,
-			"out=s" 		=> \$output_path,
-			"reference=s@" 	=> \@annot_fastas,
-			"log=i"  		=> \$log_level,
-			"config=s"     	=> \$config_file,
-			"dust=s"     	=> \$dust
+		"help"     		=> \$help,
+		"is=s"     		=> \$is_path,
+		"genome=s" 		=> \$genome_path,
+		"is_pct=f" 		=> \$is_req_pct,
+		"flank_pct=f"  	=> \$flank_req_pct,
+		"flank_len=f"  	=> \$flank_req_len,
+		"out=s" 		=> \$output_path,
+		"reference=s@" 	=> \@annot_fastas,
+		"log=i"  		=> \$log_level,
+		"config=s"     	=> \$config_file,
+		"dust=s"     	=> \$dust
 	);
 
 	##
@@ -571,21 +571,21 @@ sub blast_is_genome()
 		$log->logdie ("Error no size reference for $subjectid\n") unless defined($slength);
 
 		my $hit = InsertionSeq::ContigBlastHit->new(
-				q_name    => $is_name,
-				is_name   => $is_name,
-				pct_id    => $pct_id,
-				req_pct_id  => $is_req_pct,
-				req_len  => $is_req_len,
-				queryid   => $queryid,
-				qstart    => $qstart,
-				qend      => $qend,
-				qlength   => $qlength,
-				subjectid => $subjectid,
-				sstart    => $sstart,
-				send      => $send,
-				slength   => $slength,
-				name 	  => $subjectid,
-				filename => $genome_path
+			q_name    => $is_name,
+			is_name   => $is_name,
+			pct_id    => $pct_id,
+			req_pct_id  => $is_req_pct,
+			req_len  => $is_req_len,
+			queryid   => $queryid,
+			qstart    => $qstart,
+			qend      => $qend,
+			qlength   => $qlength,
+			subjectid => $subjectid,
+			sstart    => $sstart,
+			send      => $send,
+			slength   => $slength,
+			name 	  => $subjectid,
+			filename => $genome_path
 		);
 
 		#$hit->initialize();
@@ -607,7 +607,7 @@ sub blast_is_genome()
 	for my $subjectid ( sort keys %blast_hash )
 	{
 		for $hit ( sort { $a->{sstart} <=> $b->{sstart} }
-				@{ $blast_hash{$subjectid} }
+			@{ $blast_hash{$subjectid} }
 		)
 		{
 			$maxSubWidth = length($hit->{subjectid}) if (length($hit->{subjectid}) > $maxSubWidth);
@@ -618,7 +618,7 @@ sub blast_is_genome()
 	{
 		## Sort by contig, then position
 		for $hit ( sort { $a->{sstart} <=> $b->{sstart} }
-				@{ $blast_hash{$subjectid} }
+			@{ $blast_hash{$subjectid} }
 		)
 		{
 			my $col1 = "";
@@ -682,7 +682,7 @@ sub blast_is_genome()
 				#{
 				#$logMessage .=" [Auto-pairing flanks from same IS in same contig.] ";
 				#$beginFlank->mate_with($endFlank);
-				#}	
+				#}
 			}
 			my $logMessage = sprintf("%-3s %-".$maxSubWidth."s   %6s%%   %-11s   %6s   %-30s   %-10s   %-30s", $col1, $col2, $col3, $col4, $col5, $col6, $col7, $col8);
 			$log->info($logMessage."\n");
@@ -728,7 +728,7 @@ sub blast_is_genome()
 	}
 
 	$log->info(sprintf("%-3s %-".$maxSidLen."s   %6s%%   %3s    %-5s %-5s %-5s  %-20s   %-35s\n",
-					"  ", "Contig Name", "PctID", "Len", "CDir", "FType", "FDir", "Closest Base", "Annotation"));
+			"  ", "Contig Name", "PctID", "Len", "CDir", "FType", "FDir", "Closest Base", "Annotation"));
 	#$log->info(sprintf("%-3s %-".$maxSidLen."s   %6s%%   %-5s %-5s %-5s  %-20s   %-35s\n",
 	#"  ", "Contig Name", "PctID", "CDir", "FType", "FDir", "Closest Base", "Annotation"));
 	for my $flank (@flanks)
@@ -741,7 +741,7 @@ sub blast_is_genome()
 		if (defined($best))
 		{
 			$logString .= sprintf("%6s%%   %3s    %-5s %-5s %-5s  %-20s   %-35s\n",
-					$best->get_pct_id(), $best->get_matchlen(), $flank->{contig_direction}, $flank->{location}, $best->{sdir},$best->closest_is_base(),$flank->{annotation_name});
+				$best->get_pct_id(), $best->get_matchlen(), $flank->{contig_direction}, $flank->{location}, $best->{sdir},$best->closest_is_base(),$flank->{annotation_name});
 		}
 		else
 		{
@@ -777,28 +777,26 @@ sub blast_is_genome()
 
 	@good_flanks = sort {
 		$a->{annotation_name} cmp $b->{annotation_name}
-				|| $a->{closest_is_base} <=> $b->{closest_is_base}
-				|| $a->pick_best_blast()->get_pct_id() <=> $b->pick_best_blast()->get_pct_id()
-				|| $a->pick_best_blast()->type() cmp $b->pick_best_blast()->type()
-				|| $b->pick_best_blast()->get_name() cmp $a->pick_best_blast()->get_name()
+			|| $a->{closest_is_base} <=> $b->{closest_is_base}
+			|| $a->pick_best_blast()->get_pct_id() <=> $b->pick_best_blast()->get_pct_id()
+			|| $a->pick_best_blast()->type() cmp $b->pick_best_blast()->type()
+			|| $b->pick_best_blast()->get_name() cmp $a->pick_best_blast()->get_name()
 	}  @good_flanks ;
 
 	##
-	## Calculate offsets from previous flank			 		
+	## Calculate offsets from previous flank
 	##
-	my $basesDiff = "";
+	my $basesDiff;
 	my $lastAnnot = "";
 	my $lastLoc = -1;
 	my $last_flank;
 	for my $flank (@good_flanks)
 	{
 		my $best = $flank->pick_best_blast();
-		$basesDiff = 0;
-		$lastLoc = -1 if ($flank->{annotation_name} ne $lastAnnot);
-		$basesDiff = ($best->closest_is_base() - $lastLoc) if (($flank->{annotation_name} eq $lastAnnot) && $lastLoc >= 0);
-		$flank->{offset_from_last} =  $basesDiff;
-		$lastLoc = $best->closest_is_base();
-		$lastAnnot = $flank->{annotation_name};
+		if ($flank->{annotation_name} ne $lastAnnot)
+		{
+			$lastLoc = 0;
+		}
 
 		##
 		## Flanks are sorted with Partial matches before Whole,
@@ -807,6 +805,13 @@ sub blast_is_genome()
 		if (defined($last_flank) && $flank->is_dup_of($last_flank))
 		{
 			$last_flank->{flank_dup} = 1;
+			# we don't need to update $basesDiff, $lastLoc, or $lastAnnot for Duplicates
+			$flank->{offset_from_last} =  $basesDiff;
+		} else {
+			$basesDiff = ($best->closest_is_base() - $lastLoc);
+			$flank->{offset_from_last} =  $basesDiff;
+			$lastLoc = $best->closest_is_base();
+			$lastAnnot = $flank->{annotation_name};
 		}
 		$last_flank = $flank;
 	}
@@ -835,16 +840,20 @@ sub blast_is_genome()
 	my $lastFlank;
 	for my $flank (@good_flanks)
 	{
+		my $mate_type;
 		if (!$flank->{flank_dup}
-				&& defined($lastFlank)
-				&& !defined($flank->{mate})
-				&& !defined($lastFlank->{mate})
-				&& $flank->is_mate_of($lastFlank))
+			&& defined($lastFlank)
+			&& !defined($flank->{mate})
+			&& !defined($lastFlank->{mate})
+			&& ($mate_type = $flank->is_mate_of($lastFlank, \@allAnnotationISHits)))
 		{
-			$flank->mate_with($lastFlank);
+			$flank->mate_with($lastFlank, $mate_type);
 		}
-
-		$lastFlank = $flank;
+		if (!$flank->{flank_dup})
+		{
+			# need to skip Duplicates to match up non-Duplicates as mates
+			$lastFlank = $flank;
+		}
 	}
 
 
@@ -874,17 +883,13 @@ sub blast_is_genome()
 
 		$flank_desc_line .= "*DUP* " if ($flank->{flank_dup});
 		if ( defined($flank->{mate})
-				&& (   ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_FWD && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_BEGIN)
-				|| ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_REV && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
-		)
+			&& ($flank->closest_is_base() < $flank->{mate}->closest_is_base())
 		)
 		{
 			$flank_desc_line .= "  _/--";
 		}
 		elsif (defined($flank->{mate})
-				&& (($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_REV && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_BEGIN)
-				|| ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_FWD && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
-		)
+			&& ($flank->closest_is_base() >= $flank->{mate}->closest_is_base())
 		)
 		{
 			$flank_desc_line .= "   \\--";
@@ -893,6 +898,26 @@ sub blast_is_genome()
 		{
 			$flank_desc_line .= "      " unless ($flank->{flank_dup});
 		}
+		#		if ( defined($flank->{mate})
+		#			&& (   ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_FWD && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_BEGIN)
+		#				|| ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_REV && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
+		#				)
+		#		)
+		#		{
+		#			$flank_desc_line .= ($flank->{mate_type} == 1) ? "  _/--" : "   \\--";
+		#		}
+		#		elsif (defined($flank->{mate})
+		#			&& (($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_REV && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_BEGIN)
+		#				|| ($flank->{direction} eq $InsertionSeq::Flank::DIRECTION_FWD && $flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
+		#				)
+		#				)
+		#		{
+		#			$flank_desc_line .= ($flank->{mate_type} == 1) ? "   \\--" : "  _/--";
+		#		}
+		#		else
+		#		{
+		#	   		$flank_desc_line .= "      " unless ($flank->{flank_dup});
+		#		}
 
 		$flank_desc_line .= "$flank->{annotation_name} $flank->{direction} $flank->{location} ".$best->type()." ";
 
@@ -904,7 +929,7 @@ sub blast_is_genome()
 
 		$flank_desc_line .= " (".scalar(@{$flank->{dup_list}})." duplicates) " if ($flank->{dup_list});
 
-		## Redundant with the left side ** DUP ** 
+		## Redundant with the left side ** DUP **
 		##$flank_desc_line .= " ***** FLANK DUPLICATE ***** " if ($flank->{flank_dup});
 
 		$log->info("$flank_desc_line\n");
@@ -982,7 +1007,7 @@ sub blast_is_genome()
 		if (!$flank->{flank_dup})
 		{
 			##
-			## Only ENDS 
+			## Only ENDS
 			##
 			if ($flank->{is_location} eq $InsertionSeq::Flank::LOCATION_END)
 			{
@@ -1038,7 +1063,7 @@ sub blast_is_genome()
 		{
 			## Sort by contig, then position
 			for $hit ( sort { $a->{sstart} <=> $b->{sstart} }
-					@{ $blast_hash{$subjectid} }
+				@{ $blast_hash{$subjectid} }
 			)
 			{
 				##
@@ -1186,22 +1211,22 @@ sub blastAnnotation
 
 
 		my $hit = InsertionSeq::AnnotationBlastHit->new(
-				q_name    => $flank->get_sid_name(),
-				is_name   => $flank->{is_name},
-				pct_id    => $pct_id,
-				req_pct_id  => $flank_req_pct,
-				req_len  => $flank_req_len,
-				queryid   => $queryid,
-				qstart    => $qstart,
-				qend      => $qend,
-				qlength   => $flank->{length},
-				subjectid => $subjectid,
-				sstart    => $sstart,
-				send      => $send,
-				slength   => $annotation->{size},
-				name 	  => $subjectid,
-				filename  => $annotation_fasta,
-				annotation => $annotation
+			q_name    => $flank->get_sid_name(),
+			is_name   => $flank->{is_name},
+			pct_id    => $pct_id,
+			req_pct_id  => $flank_req_pct,
+			req_len  => $flank_req_len,
+			queryid   => $queryid,
+			qstart    => $qstart,
+			qend      => $qend,
+			qlength   => $flank->{length},
+			subjectid => $subjectid,
+			sstart    => $sstart,
+			send      => $send,
+			slength   => $annotation->{size},
+			name 	  => $subjectid,
+			filename  => $annotation_fasta,
+			annotation => $annotation
 		);
 
 		$flank->add_blast_hit($hit);
@@ -1269,21 +1294,21 @@ sub blast_is_against_annotation()
 		$log->logdie( "Error no size reference for $subjectid\n") unless defined($slength);
 
 		my $contig_blast_hit = InsertionSeq::ContigBlastHit->new(
-				q_name    	=> $is_name,
-				is_name   	=> $is_name,
-				pct_id    	=> $pct_id,
-				req_pct_id	=> $is_req_pct,
-				req_len	=> $is_req_len,
-				queryid   	=> $queryid,
-				qstart    	=> $qstart,
-				qend      	=> $qend,
-				qlength   	=> $qlength,
-				subjectid 	=> $subjectid,
-				sstart    	=> $sstart,
-				send      	=> $send,
-				slength   	=> $slength,
-				name      	=> $subjectid,
-				filename	=> $annot_fasta_path
+			q_name    	=> $is_name,
+			is_name   	=> $is_name,
+			pct_id    	=> $pct_id,
+			req_pct_id	=> $is_req_pct,
+			req_len	=> $is_req_len,
+			queryid   	=> $queryid,
+			qstart    	=> $qstart,
+			qend      	=> $qend,
+			qlength   	=> $qlength,
+			subjectid 	=> $subjectid,
+			sstart    	=> $sstart,
+			send      	=> $send,
+			slength   	=> $slength,
+			name      	=> $subjectid,
+			filename	=> $annot_fasta_path
 		);
 
 
