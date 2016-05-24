@@ -215,8 +215,8 @@ sub add_blast_hit
 	my $blast_hit = shift;
 
 	if ($blast_hit->{qstart} <= $ANNOT_BASE_WIGGLE_ROOM
-			&& $blast_hit->{qlength} - $blast_hit->{qend} <= $ANNOT_BASE_WIGGLE_ROOM
-			&& $blast_hit->passes_thresholds())
+		&& $blast_hit->{qlength} - $blast_hit->{qend} <= $ANNOT_BASE_WIGGLE_ROOM
+		&& $blast_hit->passes_thresholds())
 	{
 		$blast_hit->type($InsertionSeq::ContigBlastHit::TYPE_FLANK_WHOLE);
 	}
@@ -366,8 +366,8 @@ sub is_dup_of
 	## Assume reference is the same....
 	##
 	return ($self->{annotation_name} eq $other->{annotation_name}
-			&& $self->{closest_is_base} == $other->{closest_is_base}
-			&& $self->{is_name} eq $other->{is_name});
+		&& $self->{closest_is_base} == $other->{closest_is_base}
+		&& $self->{is_name} eq $other->{is_name});
 
 
 }
@@ -397,14 +397,14 @@ sub is_mate_of
 		#return 1 if ($other->{is_location} eq $LOCATION_BEGIN && $other->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
 
 		return 1 if ($self->{is_location} eq $LOCATION_END
-				&& $other->{is_location} eq $LOCATION_BEGIN
-				&& $other->closest_is_base() > $self->closest_is_base()
-				&& ($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
+			&& $other->{is_location} eq $LOCATION_BEGIN
+			&& $other->closest_is_base() > $self->closest_is_base()
+			&& ($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
 
 		return 1 if ($self->{is_location} eq $LOCATION_BEGIN
-				&& $other->{is_location} eq $LOCATION_END
-				&& $self->closest_is_base()  > $other->closest_is_base()
-				&& ($self->closest_is_base() - $other->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
+			&& $other->{is_location} eq $LOCATION_END
+			&& $self->closest_is_base()  > $other->closest_is_base()
+			&& ($self->closest_is_base() - $other->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
 	}
 	elsif ($self->{direction} eq $DIRECTION_FWD && $other->{direction} eq $DIRECTION_FWD)
 	{
@@ -414,14 +414,14 @@ sub is_mate_of
 		#return 1 if ($other->{is_location} eq $LOCATION_END && $other->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
 
 		return 1 if ($self->{is_location} eq $LOCATION_END
-				&& $other->{is_location} eq $LOCATION_BEGIN
-				&& $self->closest_is_base()  > $other->closest_is_base()
-				&& ($self->closest_is_base() - $other->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
+			&& $other->{is_location} eq $LOCATION_BEGIN
+			&& $self->closest_is_base()  > $other->closest_is_base()
+			&& ($self->closest_is_base() - $other->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
 
 		return 1 if ($self->{is_location} eq $LOCATION_BEGIN
-				&& $other->{is_location} eq $LOCATION_END
-				&& $other->closest_is_base() > $self->closest_is_base()
-				&& ($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
+			&& $other->{is_location} eq $LOCATION_END
+			&& $other->closest_is_base() > $self->closest_is_base()
+			&& ($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
 	}
 	# Now check to see if the reference genome has the same insertion sequence at this location
 	# By the sorting before invocation $other->closets_is_base should be be less than $self->closest_is_base but let's be sure
@@ -513,7 +513,7 @@ sub to_is_mysql
 		my $flank_pct_id = $self->{flank_pct_id};
 		$flank_pct_id = "NULL" unless $flank_pct_id;
 
-		$sql .= "INSERT INTO is_flank (is_run_id, is_qf_id, is_element, reference, q_genome, begin_end, orientation, nearest_base, after_gene, in_gene, before_gene, flank_pct_id, match_quality, flank_separation, mate_flank_id, contig_count ) VALUES (";
+		$sql .= "INSERT INTO is_flank (is_run_id, is_qf_id, is_element, reference, q_genome, begin_end, orientation, nearest_base, after_gene, in_gene, before_gene, flank_pct_id, match_quality, flank_separation, mate_flank_id, contig_count, contig_pos ) VALUES (";
 
 		$sql .= '@is_run_id,';
 		$sql .= "$SQL_LAST_FEAT_ID_VAR,";
@@ -530,8 +530,9 @@ sub to_is_mysql
 		$sql .= "'$blast->{type}',";
 		$sql .= "$end_flank_distance,";
 		$sql .= "$end_flank_id,";
-		$sql .= "$contig_count";
-		$sql .= ");\n" ;
+		$sql .= "$contig_count,'";
+		$sql .= $self->get_sid_name();
+		$sql .= "');\n" ;
 
 		$sql .= "SET $SQL_LAST_IS_FLANK_ID_VAR = LAST_INSERT_ID();\n";
 	}
@@ -577,7 +578,7 @@ sub to_feat_mysql
 }
 
 ##our $CSV_HEADER = "is_element, reference, q_genome, s_genome, contig_name, feat_type, flank_begin_end, orientation, begin_base, end_base, is_annotated, (flank) is_element, reference, q_genome, begin_end, orientation, nearest_base, after_gene, in_gene, before_gene, match_quality, flank_separation, mate_flank_id, contig_count\n";
-our $CSV_HEADER = "type, id, mate_id, offset_from_previous, is_element, genome, contig_name, %_id, match_len, feat_type, flank_begin_end, orientation, contig_flank_begin_base, contig_flank_end_base, is_annotated, reference, nearest_base, after_gene, in_gene, before_gene, match_quality, contig_count\n";
+our $CSV_HEADER = "type, id, mate_id, offset_from_previous, is_element, genome, contig_name, %_id, match_len, feat_type, flank_begin_end, orientation, contig_flank_begin_base, contig_flank_end_base, is_annotated, reference, nearest_base, after_gene, in_gene, before_gene, match_quality, contig_count, contig_pos\n";
 
 sub to_csv
 {
@@ -638,10 +639,11 @@ sub to_csv
 	#$csv .= "$self->{location},";
 	$csv .= "$self->{closest_is_base},";
 	$csv .= "$geneBeforeCsv,",
-			$csv .= "$geneInCsv,";
+		$csv .= "$geneInCsv,";
 	$csv .= "$geneAfterCsv,";
 	$csv .= "$blastType,";
-	$csv .= "$contig_count";
+	$csv .= "$contig_count,";
+	$csv .= $self->get_sid_name();
 	$csv .= "\n";
 
 
