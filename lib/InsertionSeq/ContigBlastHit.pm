@@ -128,18 +128,18 @@ our $ENDING_FLANK				= "E";
 my $log = Log::Log4perl->get_logger();
 
 
-sub new
+sub new 
 {
-	my $class = shift;
-	my $self = $class->SUPER::new(@_);
-
-
-	#die ("ContigBlastHit missing IS name.\n") if ( !defined($self->{is_name}) );
-	die ("ContigBlastHit missing IS name.\n") unless ( $self->get_is_name() );
-
-	$self->evaluate();
-
-	return $self;
+    my $class = shift;
+    my $self = $class->SUPER::new(@_);
+    
+    
+    #die ("ContigBlastHit missing IS name.\n") if ( !defined($self->{is_name}) );
+    die ("ContigBlastHit missing IS name.\n") unless ( $self->get_is_name() );
+ 
+ 	$self->evaluate();
+    
+    return $self;
 }
 
 
@@ -156,7 +156,7 @@ sub type {
 
 sub evaluate {
 	my $self = shift;
-
+	
 	#
 	#   identify scaffolds comprised entirely of IS element
 	#
@@ -165,42 +165,42 @@ sub evaluate {
 		$self->{type} = $TYPE_ENTIRE;
 	}
 	## s_start & s_end are >50 bases from the scaffold edges
-	## q_start and q_end are 1 and IS_length, respectively (adding IS wiggle room)
-	elsif (    $self->{sstart}   >  $BASE_EDGE_MARGIN
-		&& $self->{send}     <  $self->{slength} - $BASE_EDGE_MARGIN)
+    ## q_start and q_end are 1 and IS_length, respectively (adding IS wiggle room)
+	elsif (    $self->{sstart}   >  $BASE_EDGE_MARGIN 
+			&& $self->{send}     <  $self->{slength} - $BASE_EDGE_MARGIN)
 	{
-		if ($self->is_full_length_is())
-		{
-			$self->{type} = $TYPE_EMBED;
-		}
-		else
-		{
-			$self->{type} = $TYPE_EMBED_TRUNC;
-		}
-	}
-	## 2) identify scaffolds with IS at edge
-	##    s_start or s_end = 1 or scaffold_length (from info file created above)
-	##    match length usually 17-50 bases but < IS_length
-	elsif ($self->{sstart} <= $BASE_EDGE_MARGIN
-		|| $self->{send} >=  $self->{slength} - $BASE_EDGE_MARGIN)
-	{
-		if ($self->{qhitlength} <= $self->{qlength})
-		{
-			if ($self->is_partial_is() || $self->is_full_length_is())
+			if ($self->is_full_length_is())
 			{
-				$self->{type} = $TYPE_EDGE_BEGIN if ($self->{sstart} <= $BASE_EDGE_MARGIN);
-				$self->{type} = $TYPE_EDGE_END if ($self->{send} >=  $self->{slength} - $BASE_EDGE_MARGIN);
+				$self->{type} = $TYPE_EMBED;
 			}
 			else
 			{
-				$self->{type} = $TYPE_EDGE_BEGIN_TRUNC if ($self->{sstart} <= $BASE_EDGE_MARGIN);
-				$self->{type} = $TYPE_EDGE_END_TRUNC if ($self->{send} >=  $self->{slength} - $BASE_EDGE_MARGIN);
+				$self->{type} = $TYPE_EMBED_TRUNC;
 			}
+	}
+	## 2) identify scaffolds with IS at edge
+    ##    s_start or s_end = 1 or scaffold_length (from info file created above)
+    ##    match length usually 17-50 bases but < IS_length
+    elsif ($self->{sstart} <= $BASE_EDGE_MARGIN 
+        || $self->{send} >=  $self->{slength} - $BASE_EDGE_MARGIN)   
+	{
+		if ($self->{qhitlength} <= $self->{qlength})
+		{
+				if ($self->is_partial_is() || $self->is_full_length_is())
+				{
+					$self->{type} = $TYPE_EDGE_BEGIN if ($self->{sstart} <= $BASE_EDGE_MARGIN);
+					$self->{type} = $TYPE_EDGE_END if ($self->{send} >=  $self->{slength} - $BASE_EDGE_MARGIN);
+				}
+				else
+				{
+					$self->{type} = $TYPE_EDGE_BEGIN_TRUNC if ($self->{sstart} <= $BASE_EDGE_MARGIN);
+					$self->{type} = $TYPE_EDGE_END_TRUNC if ($self->{send} >=  $self->{slength} - $BASE_EDGE_MARGIN);
+				}
 
 		}
 		else
 		{
-			## Query Hit length is greater than Query Sequence Length.
+			## Query Hit length is greater than Query Sequence Length. 
 			## Caused by too many gaps?
 			## Probably shouldn't happen with our criteria:
 			$self->{type} = $TYPE_EDGE_LONG;
@@ -218,12 +218,12 @@ sub get_flank
 	my $self = shift;
 	my $location = shift;
 	my ($left,$right) = $self->get_flank_coords($location);
-
+	
 	my $flank;
-
+	
 	if (defined($left))
 	{
-		#		$log->info("Flank returned.\n");
+#		$log->info("Flank returned.\n");
 		$flank =  InsertionSeq::Flank->new(
 			is_name => $self->{is_name},
 			location => $location,
@@ -234,11 +234,11 @@ sub get_flank
 			is_pct_id => $self->{pct_id},
 			contig_file_name => $self->{filename});
 	}
-	#	else
-	#	{
-	#		$log->info("No flank returned.\n");
-	#	}
-
+#	else
+#	{
+#		$log->info("No flank returned.\n");
+#	}
+	
 	return $flank;
 }
 
@@ -249,15 +249,15 @@ sub get_flank_coords
 
 	if ($direction eq $BEGINNING_FLANK)
 	{
-		return $self->get_upstream_flank_coords();
+    	return $self->get_upstream_flank_coords();
 	}
 	elsif ($direction eq $ENDING_FLANK)
 	{
-		return $self->get_downstream_flank_coords();
+    	return $self->get_downstream_flank_coords();
 	}
 	else
 	{
-		die "Unknown flank coord extraction direction: $direction\n";
+		die "Unknown flank coord extraction direction: $direction\n";	
 	}
 }
 
@@ -269,23 +269,23 @@ sub get_upstream_flank_coords
 
 	##
 	## Rev match at start edge
-	## or rev middle match
+	## or rev middle match 
 	if ($self->{sdir} eq $DIRECTION_REV
-		&& ($self->{type} eq $TYPE_EDGE_BEGIN || $self->{type} eq $TYPE_EMBED))
+	    && ($self->{type} eq $TYPE_EDGE_BEGIN || $self->{type} eq $TYPE_EMBED))
 	{
-		$start = $self->{send} + 1;
+      	$start = $self->{send} + 1;
 		$end = ($start + $FLANK_EXTRACT_BASES) - 1;
 		## Don't go past end of subject seq
 		$end = $self->{slength} if ($end > $self->{slength});
-	}
+	} 
 	##
 	## Fwd match at end edge
 	## or fwd middle match
 	elsif ($self->{sdir} eq $DIRECTION_FWD
-		&& ($self->{type} eq $TYPE_EDGE_END || $self->{type} eq $TYPE_EMBED))
+	    && ($self->{type} eq $TYPE_EDGE_END || $self->{type} eq $TYPE_EMBED))
 	{
-		$end = $self->{sstart} - 1;
-		$start = ($end - $FLANK_EXTRACT_BASES) + 1;
+      	$end = $self->{sstart} - 1;
+    	$start = ($end - $FLANK_EXTRACT_BASES) + 1; 
 		$start = 1 if ($start < 1);
 	}
 
@@ -294,7 +294,7 @@ sub get_upstream_flank_coords
 	##
 	if ( ($end - $start) + 1 < $MINIMUM_FLANK_EXTRACT_BASES)
 	{
-		undef $start;
+    	undef $start;
 		undef $end;
 	}
 
@@ -309,23 +309,23 @@ sub get_downstream_flank_coords
 
 	##
 	## Fwd match at start edge
-	## or middle match
-	if ($self->{sdir} eq $DIRECTION_FWD
+	## or middle match 
+	if ($self->{sdir} eq $DIRECTION_FWD 
 		&& ($self->{type} eq $TYPE_EDGE_BEGIN || $self->{type} eq $TYPE_EMBED))
 	{
-		$start = $self->{send} + 1;
+      	$start = $self->{send} + 1;
 		$end = ($start + $FLANK_EXTRACT_BASES) - 1;
 		## Don't go past end of subject seq
 		$end = $self->{slength} if ($end > $self->{slength});
-	}
+	} 
 	##
 	## Rev match at end edge
 	## or rev middle match
 	elsif ($self->{sdir} eq $DIRECTION_REV
-		&& ($self->{type} eq $TYPE_EDGE_END || $self->{type} eq $TYPE_EMBED))
+	        && ($self->{type} eq $TYPE_EDGE_END || $self->{type} eq $TYPE_EMBED))
 	{
-		$end = $self->{sstart} - 1;
-		$start = ($end - $FLANK_EXTRACT_BASES) + 1;
+      	$end = $self->{sstart} - 1;
+    	$start = ($end - $FLANK_EXTRACT_BASES) + 1; 
 		$start = 1 if ($start < 1);
 	}
 
@@ -334,7 +334,7 @@ sub get_downstream_flank_coords
 	##
 	if ( ($end - $start) + 1 < $MINIMUM_FLANK_EXTRACT_BASES)
 	{
-		undef $start;
+    	undef $start;
 		undef $end;
 	}
 
@@ -345,11 +345,11 @@ sub get_downstream_flank_coords
 sub is_annotatable
 {
 	my $self = shift;
-
-	return 1 if ( ( $self->{type} eq  $TYPE_EDGE_BEGIN
-		|| $self->{type} eq  $TYPE_EDGE_END
-		|| $self->{type} eq $TYPE_EMBED) );
-
+	
+	return 1 if ( ( $self->{type} eq  $TYPE_EDGE_BEGIN 
+				|| $self->{type} eq  $TYPE_EDGE_END 
+				|| $self->{type} eq $TYPE_EMBED) );
+	
 	return 0;
 }
 
@@ -358,8 +358,8 @@ sub is_full_length_is
 {
 	my $self = shift;
 	return 1 if ($self->{qstart}  <=  $IS_WIGGLE_ROOM + 1
-		&& $self->{qend}    >=  $self->{qlength} - $IS_WIGGLE_ROOM);
-
+				&& $self->{qend}    >=  $self->{qlength} - $IS_WIGGLE_ROOM);
+		
 	return 0;
 }
 
@@ -367,8 +367,8 @@ sub is_partial_is
 {
 	my $self = shift;
 	return 1 if ($self->{qstart}  <=  $IS_WIGGLE_ROOM + 1
-		||  $self->{qend}    >=  $self->{qlength} - $IS_WIGGLE_ROOM);
-
+				||  $self->{qend}    >=  $self->{qlength} - $IS_WIGGLE_ROOM);
+		
 	return 0;
 }
 
@@ -376,39 +376,40 @@ sub is_partial_is
 
 sub to_feat_mysql
 {
-	my $self = shift;
-	my $q_genome = shift;
-	my $s_genome = shift;
-	my $reference = shift;
+    my $self = shift;
+    my $q_genome = shift;
+    my $s_genome = shift;
+    my $reference = shift;
 
 
 	my $sql = "";
-	if ($self->{type} eq $TYPE_ENTIRE  || $self->{type} eq $TYPE_EMBED)
+	if ($self->{type} eq $TYPE_ENTIRE || $self->{type} eq $TYPE_EMBED || $self->{type} eq $TYPE_EMBED_TRUNC)
+	#if ($self->{type} eq $TYPE_ENTIRE  || $self->{type} eq $TYPE_EMBED)
 	{
-		$sql = "INSERT INTO is_query_feature (is_run_id,is_element, reference, q_genome, s_genome, is_pct_id, flank_pct_id, contig_name, feat_type, flank_begin_end, orientation, begin_base, end_base, is_annotated ) VALUES (";
-		$sql .= '@is_run_id,';
-		$sql .= "'$self->{is_name}',";
-		$sql .= "'$reference',";
-		$sql .= "'$q_genome',";
-		$sql .= "'$s_genome',";
-		$sql .= "$self->{pct_id},";
-		$sql .= "NULL,";
+    	$sql = "INSERT INTO is_query_feature (is_run_id,is_element, reference, q_genome, s_genome, is_pct_id, flank_pct_id, contig_name, feat_type, flank_begin_end, orientation, begin_base, end_base, is_annotated ) VALUES (";
+        $sql .= '@is_run_id,';
+        $sql .= "'$self->{is_name}',";
+        $sql .= "'$reference',";
+        $sql .= "'$q_genome',";
+        $sql .= "'$s_genome',";
+        $sql .= "$self->{pct_id},";
+        $sql .= "NULL,";
 		$sql .= "'$self->{name}',";
-		$sql .= "'E',";
-		$sql .= "'X',";
-		$sql .= "'$self->{sdir}',";
-		$sql .= "'$self->{sstart}',";
-		$sql .= "'$self->{send}',";
-		$sql .= "0";
-		$sql .= ");\n" ;
-		#$sql .= "SET $SQL_LAST_FEAT_ID_VAR = LAST_INSERT_ID();\n";
+        $sql .= "'E',";
+        $sql .= "'X',";
+        $sql .= "'$self->{sdir}',";
+        $sql .= "'$self->{sstart}',";
+        $sql .= "'$self->{send}',";
+        $sql .= "0";
+        $sql .= ");\n" ;
+        #$sql .= "SET $SQL_LAST_FEAT_ID_VAR = LAST_INSERT_ID();\n";
 	}
 	else
 	{
-		$log->error("Illegal Contig Blast Hit type sent to routine to_feat_mysql() for contig $self->{name}: $self->{type}\n");
+    	$log->error("Illegal Contig Blast Hit type sent to routine to_feat_mysql() for contig $self->{name}: $self->{type}\n");
 	}
 
-	$sql;
+    $sql;
 
 
 }
@@ -417,8 +418,8 @@ sub to_feat_mysql
 ##our $CSV_HEADER = "id, mate_id, offset_from_previous, is_element, genome, contig_name, %_id, match_len, feat_type, flank_begin_end, orientation, contig_flank_begin_base, contig_flank_end_base, is_annotated, reference, nearest_base, after_gene, in_gene, before_gene, match_quality, contig_count\n";
 sub to_csv
 {
-	my $self = shift;
-	my $genome = shift;
+    my $self = shift;
+    my $genome = shift;
 
 
 	my $csv;
@@ -427,26 +428,26 @@ sub to_csv
 		$csv .= "$self->{id},";
 		$csv .= ","; 			# No mate
 		$csv .= ","; 			# No offset
-		$csv .= "$self->{is_name},";
-		$csv .= "$genome,";
-		$csv .= ",";
+        $csv .= "$self->{is_name},";
+        $csv .= "$genome,";
+        $csv .= ",";
 		$csv .= "$self->{pct_id},";
 		$csv .= "$self->{matchlen},";
-		$csv .= "$self->{type},";
-		$csv .= "X,";
-		$csv .= "$self->{sdir},";
-		$csv .= "$self->{sstart},";
-		$csv .= "$self->{send},";
-		$csv .= "0";
-		$csv .= "\n" ;
+        $csv .= "$self->{type},";
+        $csv .= "X,";
+        $csv .= "$self->{sdir},";
+        $csv .= "$self->{sstart},";
+        $csv .= "$self->{send},";
+        $csv .= "0";
+        $csv .= "\n" ;
 
 	}
 	else
 	{
-		$log->logdie("Illegal Contig Blast Hit type sent to routine to_feat_mysql() for contig $self->{name}: $self->{type}\n");
+    	$log->logdie("Illegal Contig Blast Hit type sent to routine to_csv() for contig $self->{name}: $self->{type}\n");
 	}
 
-	$csv;
+    $csv;
 
 
 }
@@ -455,37 +456,37 @@ sub to_csv
 ## Check to see if IS flanking sequences correspond to a known IS element in the reference genome(s)
 sub check_reference_for_IS
 {
-	my $type = shift;
-	my $name = shift;
-	my $start = shift;
-	$start++; # need to correct for flank coordinates versus IS coordinates
-	my $end = shift;
-	$end--; # need to correct for flank coordinates versus IS coordinates
-	my $length = ($end - $start) + 1;
-	my $referenceISHits = shift;
+    my $type = shift;
+    my $name = shift;
+    my $start = shift;
+    $start++; # need to correct for flank coordinates versus IS coordinates
+    my $end = shift;
+    $end--; # need to correct for flank coordinates versus IS coordinates
+    my $length = ($end - $start) + 1;
+    my $referenceISHits = shift;
 
-	#print STDERR "check_reference_for_IS: $name $start $end $length\n";
-	for my $ref_hit (@{$referenceISHits}) {
-		#print STDERR "refIS: $ref_hit->{name} $ref_hit->{sstart} $ref_hit->{send} $ref_hit->{shitlength}\n";
-		if ($name ne $ref_hit->{name}) {
-			#skip hits to different contigs
-			next;
-		}
-		#check for overlap
-		if (($end < $ref_hit->{sstart}) || ($ref_hit->{send} < $start)) {
-			#no overlap so skip
-			next;
-		}
-		my $start_overlap = ($start > $ref_hit->{sstart}) ? $start : $ref_hit->{sstart};
-		my $end_overlap = ($end < $ref_hit->{send}) ? $end : $ref_hit->{send};
-		my $overlap_length_100 = (($end_overlap - $start_overlap) + 1) * 100;
-		if ((($overlap_length_100 / $length) >= $WIGGLE_OVERLAP_PERCENT) && (($overlap_length_100 / $ref_hit->{shitlength}) >= $WIGGLE_OVERLAP_PERCENT)) {
-			#print STDERR "return 1\n";
-			return 1;
-		}
+    #print STDERR "check_reference_for_IS: $name $start $end $length\n";
+    for my $ref_hit (@{$referenceISHits}) {
+	#print STDERR "refIS: $ref_hit->{name} $ref_hit->{sstart} $ref_hit->{send} $ref_hit->{shitlength}\n";
+	if ($name ne $ref_hit->{name}) {
+	    #skip hits to different contigs
+	    next;
 	}
+	#check for overlap
+	if (($end < $ref_hit->{sstart}) || ($ref_hit->{send} < $start)) {
+	    #no overlap so skip
+	    next;
+	}
+	my $start_overlap = ($start > $ref_hit->{sstart}) ? $start : $ref_hit->{sstart};
+	my $end_overlap = ($end < $ref_hit->{send}) ? $end : $ref_hit->{send};
+	my $overlap_length_100 = (($end_overlap - $start_overlap) + 1) * 100;
+	if ((($overlap_length_100 / $length) >= $WIGGLE_OVERLAP_PERCENT) && (($overlap_length_100 / $ref_hit->{shitlength}) >= $WIGGLE_OVERLAP_PERCENT)) {
+	    #print STDERR "return 1\n";
+	    return 1;
+	}
+    }
 
-	return 0;
+    return 0;
 }
 
 

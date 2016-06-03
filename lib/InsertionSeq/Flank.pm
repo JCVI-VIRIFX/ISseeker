@@ -33,7 +33,7 @@ use strict;
 
 use InsertionSeq::ContigBlastHit;
 use Log::Log4perl;
-
+ 
 #for CSV parsing
 use Text::CSV;
 
@@ -71,40 +71,42 @@ our $SQL_LAST_FEAT_ID_VAR		= '@last_is_feat_id';
 my $log = Log::Log4perl->get_logger();
 
 
-sub new
+sub new 
 {
-	my $class = shift;
-	my $self = {@_};
+    my $class = shift;
+    my $self = {@_};
 
-	bless($self, $class);
+    bless($self, $class);
 
 	die ("Flank missing flank location.\n") if ( !defined($self->{location}) );
 	die ("Flank invalid flank location:($self->{location}).\n") if ( $self->{location} ne $LOCATION_BEGIN && $self->{location} ne $LOCATION_END);
-
+	
 	##
 	## IS location is opposite of flank location
 	## (an ending flank means IS is in front of it)
 	##
 	$self->{is_location} = $LOCATION_END if ($self->{location} eq $LOCATION_BEGIN);
 	$self->{is_location} = $LOCATION_BEGIN if ($self->{location} eq $LOCATION_END);
-
+	
 	die ("Flank missing contig direction.\n") if ( !defined($self->{contig_direction}) );
 	die ("Flank invalid contig direction:($self->{contig_direction}).\n") if ( $self->{contig_direction} ne $DIRECTION_FWD && $self->{contig_direction} ne $DIRECTION_REV);
-
+	
 	die ("Flank missing contig lower coord.\n") if ( !defined($self->{contig_lower_coord}) );
 	die ("Flank missing contig upper coord.\n") if ( !defined($self->{contig_upper_coord}) );
 	die ("Flank missing contig name.\n") if ( !defined($self->{contig_name}) );
 	die ("Flank missing IS name.\n") if ( !defined($self->{is_name}) );
-
+	
 	die ("Flank missing contig fasta file name.\n") if ( !defined($self->{contig_file_name}) );
-
+	
 	$self->{length} = ($self->{contig_upper_coord} - $self->{contig_lower_coord}) +1;
 
 
 	$self->{direction} = "";
 
+	$self->{SQL_output} = 0;
 
 
+	
 
 	if ($self->{contig_name} =~ /\|/)
 	{
@@ -116,29 +118,29 @@ sub new
 			##
 			## opt for full accession first
 			##
-			#$log->info("Extracting short name $2 from $self->{contig_name} \n");
+#$log->info("Extracting short name $2 from $self->{contig_name} \n");
 			$self->{contig_name} = $2;
 		}
 		elsif ($self->{contig_name} =~ /(gb|ref|emb|dbj)\|(\w+)/)
 		{
 			##
-			## opt for accession
+			## opt for accession 
 			##
-			#$log->info("Extracting short name $2 from $self->{contig_name} \n");
+#$log->info("Extracting short name $2 from $self->{contig_name} \n");
 			$self->{contig_name} = $2;
 		}
 		elsif ($self->{contig_name} =~ /gi\|(\w+)/)
 		{
-			##
+			## 
 			## Or take GI
 			##
-			#$log->info("Extracting short name $1 from $self->{contig_name} \n");
+#$log->info("Extracting short name $1 from $self->{contig_name} \n");
 			$self->{contig_name} = $1;
 		}
 		elsif ($self->{contig_name} =~ /^>(\w+|\.)\|/)
 		{
 			## Take what's first
-			#$log->info("Extracting short name $self->{contig_name} \n");
+#$log->info("Extracting short name $self->{contig_name} \n");
 		}
 		else
 		{
@@ -156,7 +158,7 @@ sub new
 ##
 sub get_sid_name
 {
-	my $self = shift;
+	my $self = shift;	
 
 	return $self->{contig_name}."_".$self->{location}.$self->{contig_direction}."_".$self->{contig_lower_coord}."_".$self->{contig_upper_coord};
 }
@@ -171,14 +173,14 @@ sub get_location_closest_to_is
 {
 	my $self = shift;
 	my $blast = shift;
-
+	
 	my $blast_hit_direction = $blast->{sdir};
 	my $lower = $blast->{sstart};
-	my $upper = $blast->{send};
-
-
+	my $upper = $blast->{send};	
+	
+	
 	die "Flank: unknown blast hit direction: $blast_hit_direction" if ( $blast_hit_direction ne $DIRECTION_FWD && $blast_hit_direction ne $DIRECTION_REV);
-
+	
 	if ($blast_hit_direction eq $DIRECTION_FWD)
 	{
 		if ($self->{contig_direction} eq $DIRECTION_FWD)
@@ -213,8 +215,8 @@ sub add_blast_hit
 {
 	my $self = shift;
 	my $blast_hit = shift;
-
-	if ($blast_hit->{qstart} <= $ANNOT_BASE_WIGGLE_ROOM
+	
+	if ($blast_hit->{qstart} <= $ANNOT_BASE_WIGGLE_ROOM 
 		&& $blast_hit->{qlength} - $blast_hit->{qend} <= $ANNOT_BASE_WIGGLE_ROOM
 		&& $blast_hit->passes_thresholds())
 	{
@@ -224,20 +226,20 @@ sub add_blast_hit
 	{
 		$blast_hit->type($InsertionSeq::ContigBlastHit::TYPE_FLANK_PARTIAL);
 	}
-
+	
 	##
 	## Record which base is closest to the IS
 	##
 	my $base = $self->get_location_closest_to_is($blast_hit);
-
+	
 	##
 	## Save in in the blast_hit
 	$blast_hit->closest_is_base($base);
-
+	
 	$log->debug("Closest_IS: ".$blast_hit->type()." $self->{contig_direction} $self->{location} $blast_hit->{sdir} ($blast_hit->{sstart} $blast_hit->{send}) = ".$blast_hit->closest_is_base()."\n");
-
+	
 	push @{$self->{blast_hits}}, $blast_hit;
-
+	
 	##
 	## Reset the best, since we don't know anymore
 	##
@@ -249,21 +251,21 @@ sub add_blast_hit
 ##
 ## Find the blast closest to the end of the flank adjacent to the IS
 ## There's probably a slicker way to do this, but it seems clearer to me
-## to just break out the cases
+## to just break out the cases 
 ##
 sub pick_best_blast
 {
 	my $self = shift;
-
+	
 	if (defined($self->{best_blast_hit}))
 	{
 		return $self->{best_blast_hit};
 	}
-
+		
 	if (defined($self->{blast_hits}))
-	{
+	{	
 		my @sorted_list;
-
+		
 		if ($self->{contig_direction} eq $DIRECTION_FWD)
 		{
 			##
@@ -283,7 +285,7 @@ sub pick_best_blast
 			{
 				die "Unexpected flank location: $self->{location}\n";
 			}
-		}
+		}	
 		elsif ($self->{contig_direction} eq $DIRECTION_REV)
 		{
 			##
@@ -292,7 +294,7 @@ sub pick_best_blast
 			if ($self->{location} eq $LOCATION_BEGIN)
 			{
 				# Minimum query start
-				@sorted_list =  sort  { $b->passes_thresholds() <=> $a->passes_thresholds() || $a->{qstart} <=> $b->{qstart} || $b->{qhitlen} <=> $a->{qhitlen}  } @{$self->{blast_hits}}
+				@sorted_list =  sort  { $b->passes_thresholds() <=> $a->passes_thresholds() || $a->{qstart} <=> $b->{qstart} || $b->{qhitlen} <=> $a->{qhitlen}  } @{$self->{blast_hits}}		
 			}
 			elsif ($self->{location} eq $LOCATION_END)
 			{
@@ -302,13 +304,13 @@ sub pick_best_blast
 			else
 			{
 				die "Unexpected flank location: $self->{location}\n";
-			}
+			}	
 		}
 		else
 		{
 			die "Unexpected contig blast direction: $self->{contig_direction}\n";
 		}
-
+		
 
 		##
 		## Pick the best from the sort
@@ -341,7 +343,7 @@ sub pick_best_blast
 		}
 
 	}
-
+	
 
 	return $self->{best_blast_hit};
 }
@@ -357,15 +359,15 @@ sub closest_is_base
 
 sub is_dup_of
 {
-	my $self = shift;
-	my $other = shift;
+    my $self = shift;
+    my $other = shift;
 
 
-	##
-	## Must be same IS, reference, query, location
+    ##
+    ## Must be same IS, reference, query, location
 	## Assume reference is the same....
-	##
-	return ($self->{annotation_name} eq $other->{annotation_name}
+    ##
+    return ($self->{annotation_name} eq $other->{annotation_name}
 		&& $self->{closest_is_base} == $other->{closest_is_base}
 		&& $self->{is_name} eq $other->{is_name});
 
@@ -386,41 +388,41 @@ sub is_mate_of
 
 	#my $self_base = $self->closest_is_base();
 	#my $other_base = $other->closest_is_base();
-	#print STDERR "is_mate_of: self:$self->{direction}:$self->{is_location}:$self_base other:$other->{direction}:$other->{is_location}:$other_base\n";
+	#print STDERR "is_mate_of: self:$self->{direction}:$self->{is_location}:$self_base other:$other->{direction}:$other->{is_location}:$other_base\n"; 
 	# Check for flanks which overlap by a small amount indicating that there is an IS insertion where a short part of the
 	# reference genome is duplicated
 	if ($self->{direction} eq $DIRECTION_REV && $other->{direction} eq $DIRECTION_REV)
 	{
-		return 1 if (abs($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE); #Currently have BEGIN/END LOCATION constraint turned off
+	    return 1 if (abs($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE); #Currently have BEGIN/END LOCATION constraint turned off
 		## Begin will be 15 bases toward 3' end from End
 		#return 1 if ($self->{is_location} eq $LOCATION_BEGIN && $self->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
 		#return 1 if ($other->{is_location} eq $LOCATION_BEGIN && $other->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
 
-		return 1 if ($self->{is_location} eq $LOCATION_END
-			&& $other->{is_location} eq $LOCATION_BEGIN
-			&& $other->closest_is_base() > $self->closest_is_base()
+		return 1 if ($self->{is_location} eq $LOCATION_END 
+			&& $other->{is_location} eq $LOCATION_BEGIN 
+			&& $other->closest_is_base() > $self->closest_is_base() 
 			&& ($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
 
-		return 1 if ($self->{is_location} eq $LOCATION_BEGIN
-			&& $other->{is_location} eq $LOCATION_END
+		return 1 if ($self->{is_location} eq $LOCATION_BEGIN 
+			&& $other->{is_location} eq $LOCATION_END 
 			&& $self->closest_is_base()  > $other->closest_is_base()
 			&& ($self->closest_is_base() - $other->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
 	}
 	elsif ($self->{direction} eq $DIRECTION_FWD && $other->{direction} eq $DIRECTION_FWD)
 	{
-		return 1 if (abs($self->closest_is_base() - $other->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE); #Currently have BEGIN/END LOCATION constraint turned off
+	    return 1 if (abs($self->closest_is_base() - $other->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE); #Currently have BEGIN/END LOCATION constraint turned off
 		## End will be 15 bases toward 3' end from Begin
 		#return 1 if ($self->{is_location} eq $LOCATION_END && $self->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
 		#return 1 if ($other->{is_location} eq $LOCATION_END && $other->{offset_from_last} <= $MAX_FLANK_PAIRING_DISTANCE);
 
-		return 1 if ($self->{is_location} eq $LOCATION_END
-			&& $other->{is_location} eq $LOCATION_BEGIN
+		return 1 if ($self->{is_location} eq $LOCATION_END 
+			&& $other->{is_location} eq $LOCATION_BEGIN 
 			&& $self->closest_is_base()  > $other->closest_is_base()
 			&& ($self->closest_is_base() - $other->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
 
-		return 1 if ($self->{is_location} eq $LOCATION_BEGIN
-			&& $other->{is_location} eq $LOCATION_END
-			&& $other->closest_is_base() > $self->closest_is_base()
+		return 1 if ($self->{is_location} eq $LOCATION_BEGIN 
+			&& $other->{is_location} eq $LOCATION_END 
+			&& $other->closest_is_base() > $self->closest_is_base() 
 			&& ($other->closest_is_base() - $self->closest_is_base())  <= $MAX_FLANK_PAIRING_DISTANCE);
 	}
 	# Now check to see if the reference genome has the same insertion sequence at this location
@@ -428,13 +430,13 @@ sub is_mate_of
 	my $start = $other->closest_is_base();
 	my $end = $self->closest_is_base();
 	if ($start > $end) {
-		my $tmp = $start;
-		$start = $end;
-		$end = $tmp;
+	    my $tmp = $start;
+	    $start = $end;
+	    $end = $tmp;
 	}
 	# check if these coordinates correspond to an IS element
 	if (InsertionSeq::ContigBlastHit->check_reference_for_IS($self->{annotation_name}, $start, $end, $referenceISHits)) {
-		return 2;
+	    return 2;
 	}
 
 
@@ -446,7 +448,7 @@ sub mate_with
 	my $self = shift;
 	my $other = shift;
 	my $mate_type = shift;
-
+	
 	$other->{mate} = $self;
 	$self->{mate} = $other;
 	$other->{mate_type} = $mate_type;
@@ -458,14 +460,14 @@ sub get_valid_contig_count
 {
 	my $self = shift;
 
-	my $contig_count = 1; ## 1 for me
+    my $contig_count = 1; ## 1 for me
 	for my $flank ( @{$self->{dup_list}} )
 	{
 		my $blast = $flank->pick_best_blast();
-		++$contig_count if ($blast->passes_thresholds());
+    	++$contig_count if ($blast->passes_thresholds());
 	}
 
-	return $contig_count;
+   return $contig_count;
 }
 
 sub to_is_mysql
@@ -474,37 +476,37 @@ sub to_is_mysql
 	my $end_flank_distance = shift;
 	my $end_flank_id = shift;
 	my $source_genome = shift;
-
+	
 	$end_flank_distance  = "NULL" unless defined($end_flank_distance);
 	$end_flank_id  = "NULL" unless defined($end_flank_id);
-
+	
 	my $sql;
 	my $blast = $self->pick_best_blast();
-
+	
 	if (defined($blast))
 	{
-		my  ($geneBefore,$gene,$geneAfter) = $blast->{annotation}->locate_base($blast->{closest_is_base}) ;
-
-		##
-		## Quote them if they exist
-		##
-		my $geneBeforeSql = "'$geneBefore->{accession}'" if defined($geneBefore);
-		my $geneInSql = "'$gene->{accession}'" if defined($gene);
-		my $geneAfterSql = "'$geneAfter->{accession}'" if defined($geneAfter);
-
-		##
-		## NULL them if they don't
-		##
-		$geneBeforeSql = "NULL" unless defined($geneBeforeSql);
-		$geneInSql = "NULL" unless defined($geneInSql);
-		$geneAfterSql = "NULL" unless defined($geneAfterSql);
-
+	    my  ($geneBefore,$gene,$geneAfter) = $blast->{annotation}->locate_base($blast->{closest_is_base}) ;
+	    
+	    ##
+	    ## Quote them if they exist
+	    ##
+	    my $geneBeforeSql = "'$geneBefore->{accession}'" if defined($geneBefore);
+	    my $geneInSql = "'$gene->{accession}'" if defined($gene);
+	    my $geneAfterSql = "'$geneAfter->{accession}'" if defined($geneAfter);
+	    
+	    ##
+	    ## NULL them if they don't
+	    ##
+	    $geneBeforeSql = "NULL" unless defined($geneBeforeSql);
+	    $geneInSql = "NULL" unless defined($geneInSql);
+	    $geneAfterSql = "NULL" unless defined($geneAfterSql);
+	    
 
 		##
 		## Count up supporting contigs
 		##
 		my $contig_count = $self->get_valid_contig_count();
-
+	    
 		##
 		## Write dependent record first:
 		##
@@ -512,9 +514,9 @@ sub to_is_mysql
 
 		my $flank_pct_id = $self->{flank_pct_id};
 		$flank_pct_id = "NULL" unless $flank_pct_id;
-
+	    
 		$sql .= "INSERT INTO is_flank (is_run_id, is_qf_id, is_element, reference, q_genome, begin_end, orientation, nearest_base, after_gene, in_gene, before_gene, flank_pct_id, match_quality, flank_separation, mate_flank_id, contig_count, contig_pos ) VALUES (";
-
+    
 		$sql .= '@is_run_id,';
 		$sql .= "$SQL_LAST_FEAT_ID_VAR,";
 		$sql .= "'$self->{is_name}',";
@@ -532,10 +534,10 @@ sub to_is_mysql
 		$sql .= "$end_flank_id,";
 		$sql .= "$contig_count,'";
 		$sql .= $self->get_sid_name();
-		$sql .= "');\n" ;
+		$sql .= "');\n" ;	
 
 		$sql .= "SET $SQL_LAST_IS_FLANK_ID_VAR = LAST_INSERT_ID();\n";
-	}
+	}	
 
 	$sql;
 }
@@ -555,23 +557,23 @@ sub to_feat_mysql
 	my $flank_pct_id = $self->{flank_pct_id} if ($self->{annotation_name} && $self->{annotation_name} eq $annotation);
 	$flank_pct_id = "NULL" unless $flank_pct_id;
 
-	my $sql = "INSERT INTO is_query_feature (is_run_id,is_element, reference, q_genome, s_genome, is_pct_id, flank_pct_id, contig_name, feat_type, flank_begin_end, orientation, begin_base, end_base, is_annotated ) VALUES (";
-	$sql .= '@is_run_id,';
-	$sql .= "'$self->{is_name}',";
-	$sql .= "'$annotation',";
-	$sql .= "'$query_genome',";
-	$sql .= "'$source_genome',";
-	$sql .= "$self->{is_pct_id},";
-	$sql .= "$flank_pct_id,";
-	$sql .= "'$self->{contig_name}',";
-	$sql .= "'$SQL_FLANK_FEAT_TYPE',";
-	$sql .= "'$self->{location}',";
-	$sql .= "'$self->{contig_direction}',";
-	$sql .= "'$self->{contig_lower_coord}',";
-	$sql .= "'$self->{contig_upper_coord}',";
-	$sql .= $annotated;
-	$sql .= ");\n" ;
-	$sql .= "SET $SQL_LAST_FEAT_ID_VAR = LAST_INSERT_ID();\n";
+    my $sql = "INSERT INTO is_query_feature (is_run_id,is_element, reference, q_genome, s_genome, is_pct_id, flank_pct_id, contig_name, feat_type, flank_begin_end, orientation, begin_base, end_base, is_annotated ) VALUES (";
+		$sql .= '@is_run_id,';
+		$sql .= "'$self->{is_name}',";
+		$sql .= "'$annotation',";
+		$sql .= "'$query_genome',";
+		$sql .= "'$source_genome',";
+		$sql .= "$self->{is_pct_id},";
+		$sql .= "$flank_pct_id,";
+		$sql .= "'$self->{contig_name}',";
+		$sql .= "'$SQL_FLANK_FEAT_TYPE',";
+		$sql .= "'$self->{location}',";
+		$sql .= "'$self->{contig_direction}',";
+		$sql .= "'$self->{contig_lower_coord}',";
+		$sql .= "'$self->{contig_upper_coord}',";
+		$sql .= $annotated;
+		$sql .= ");\n" ;	
+		$sql .= "SET $SQL_LAST_FEAT_ID_VAR = LAST_INSERT_ID();\n";
 
 	$sql;
 
@@ -588,64 +590,64 @@ sub to_csv
 
 	my $annotated = 0;
 
-
+	
 	my $csv = "";
-	my $geneBeforeCsv = "";
-	my $geneInCsv = "";
-	my $geneAfterCsv = "";
+    my $geneBeforeCsv = "";
+    my $geneInCsv = "";
+    my $geneAfterCsv = "";
 
 	my $blastType = "";
-	my $contig_count = 1; ## 1 for me
-	$contig_count  += scalar(@{$self->{dup_list}}) if ($self->{dup_list});
+		my $contig_count = 1; ## 1 for me
+		$contig_count  += scalar(@{$self->{dup_list}}) if ($self->{dup_list});
 
-	my $annotation_name = "";
-	$annotation_name = $self->{annotation_name} if ($self->{annotation_name});
+   	my $annotation_name = "";
+   	$annotation_name = $self->{annotation_name} if ($self->{annotation_name});
 
 	my $blast = $self->pick_best_blast();
 	if (defined($blast))
 	{
 		$annotated = 1 if($blast->passes_thresholds());
-		$blastType = $blast->{type};
+    	$blastType = $blast->{type};
 		if ($blast->{annotation} && $blast->passes_thresholds())
 		{
-			my  ($geneBefore,$gene,$geneAfter) = $blast->{annotation}->locate_base($blast->{closest_is_base});
-			$geneBeforeCsv = $geneBefore->{accession} if defined($geneBefore);
-			$geneInCsv = $gene->{accession} if defined($gene);
-			$geneAfterCsv = $geneAfter->{accession} if defined($geneAfter);
+	    	my  ($geneBefore,$gene,$geneAfter) = $blast->{annotation}->locate_base($blast->{closest_is_base});
+    		$geneBeforeCsv = $geneBefore->{accession} if defined($geneBefore);
+    		$geneInCsv = $gene->{accession} if defined($gene);
+    		$geneAfterCsv = $geneAfter->{accession} if defined($geneAfter);
 		}
 	}
 
 
-	$csv .= "$self->{id},";
-	$csv .= "$self->{mate}->{id}" if ($self->{mate});
-	$csv .= ",";
-	$csv .= "$self->{offset_from_last},";
-	$csv .= "$self->{is_name},";
-	$csv .= "$source_genome,";
-	$csv .= "$self->{contig_name},";
-	$csv .= "$self->{flank_pct_id},";
-	$csv .= "$self->{matchlen},";
-	$csv .= "$SQL_FLANK_FEAT_TYPE,";
-	$csv .= "$self->{location},";
-	$csv .= "$self->{direction},";
-	$csv .= "$self->{contig_lower_coord},";
-	$csv .= "$self->{contig_upper_coord},";
-	$csv .= "$annotated,";
+		$csv .= "$self->{id},";
+		$csv .= "$self->{mate}->{id}" if ($self->{mate});
+		$csv .= ",";
+		$csv .= "$self->{offset_from_last},";
+		$csv .= "$self->{is_name},";
+        $csv .= "$source_genome,";
+        $csv .= "$self->{contig_name},";
+		$csv .= "$self->{flank_pct_id},";
+		$csv .= "$self->{matchlen},";
+        $csv .= "$SQL_FLANK_FEAT_TYPE,";
+        $csv .= "$self->{location},";
+		$csv .= "$self->{direction},";
+        $csv .= "$self->{contig_lower_coord},";
+        $csv .= "$self->{contig_upper_coord},";
+        $csv .= "$annotated,";
 
-	## flank info
-	#$csv .= "$self->{is_name},";
-	$csv .= "$annotation_name,";
-	#$csv .= "$source_genome,";
-	#$csv .= "$self->{location},";
-	$csv .= "$self->{closest_is_base},";
-	$csv .= "$geneBeforeCsv,",
+		## flank info 
+		#$csv .= "$self->{is_name},";
+		$csv .= "$annotation_name,";
+		#$csv .= "$source_genome,";
+		#$csv .= "$self->{location},";
+		$csv .= "$self->{closest_is_base},";
+		$csv .= "$geneBeforeCsv,",
 		$csv .= "$geneInCsv,";
-	$csv .= "$geneAfterCsv,";
-	$csv .= "$blastType,";
-	$csv .= "$contig_count,";
-	$csv .= $self->get_sid_name();
-	$csv .= "\n";
-
+		$csv .= "$geneAfterCsv,";
+		$csv .= "$blastType,";
+		$csv .= "$contig_count,";
+		$csv .= $self->get_sid_name();
+		$csv .= "\n";
+	
 
 	$csv;
 
