@@ -62,6 +62,9 @@ use InsertionSeq::Defaults qw(
 	$DEFAULT_REQ_FLANK_LENGTH
 );
 
+## TODO: get fancy and tie this to the git tags
+my $VERSION = "1.1";
+
 
 my $DEFAULT_CONFIG_FILE = (dirname abs_path $0)."/ISseeker.cfg";
 
@@ -324,6 +327,7 @@ sub main
 	my $flank_req_len;
 	my %genomeSizeHash;
 	my %isSizeHash;
+	my $version;
 	my $config_file = $DEFAULT_CONFIG_FILE;
 	$genome_path = "";
 	$is_path     = "";
@@ -342,11 +346,13 @@ sub main
 	  . "\t--out: path to output files\n"
 	  . "\t--config: alternate config file with app locations\n"
 	  . "\t--log: logging level (0-3)\n"
+	  . "\t--version: show ISseeker version number and exit\n"
 	  . "\t--help: print this usage statement\n";
 
 	#read command line options for path to sequences and annotation behavior
 	exit unless GetOptions(
 		"help"     		=> \$help,
+		"version"     	=> \$version,
 		"is=s"     		=> \$is_path,
 		"genome=s" 		=> \$genome_path,
 		"is_pct=f" 		=> \$is_req_pct,
@@ -358,6 +364,12 @@ sub main
 		"config=s"     	=> \$config_file,
 		"dust=s"     	=> \$dust
 	);
+
+	if ($version)
+	{
+    	print "ISseeker version $VERSION\n";
+		exit ;
+	}
 
 	##
 	## Dust defult is F (no dust)
