@@ -37,6 +37,9 @@ use warnings;
 BEGIN { 
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw( 
+	$USE_LEGACYBLAST
+	$BLASTPLUS_BLASTN_PATH
+	$BLASTPLUS_MAKEBLASTDB_PATH
 	$BLASTALL_PATH
 	$FORMATDB_PATH
 	$EXTRACTSEQ_PATH
@@ -51,7 +54,9 @@ require Exporter;
 
 our %config;
 
-our $SIZEFASTA_PATH;
+our $USE_LEGACYBLAST;
+our $BLASTPLUS_BLASTN_PATH;
+our $BLASTPLUS_MAKEBLASTDB_PATH;
 our $BLASTALL_PATH;
 our $FORMATDB_PATH;
 our $EXTRACTSEQ_PATH;
@@ -72,8 +77,19 @@ sub Process
 	##
 	## Required
 	##
-	$BLASTALL_PATH           		= $config{"BLASTALL_PATH"} || die "BLASTALL_PATH not set in config file $file!\n";
-	$FORMATDB_PATH           		= $config{"FORMATDB_PATH"} || die "FORMATDB_PATH not set in config file $file!\n";
+
+	$USE_LEGACYBLAST           		= $config{"USE_LEGACYBLAST"} || die "USE_LEGACYBLAST not set in config file $file!\n";
+	if ($USE_LEGACYBLAST eq "true")
+	{
+		$BLASTALL_PATH           		= $config{"BLASTALL_PATH"} || die "BLASTALL_PATH not set in config file $file!\n";
+		$FORMATDB_PATH           		= $config{"FORMATDB_PATH"} || die "FORMATDB_PATH not set in config file $file!\n";
+	}
+	else
+	{
+		$BLASTPLUS_BLASTN_PATH       = $config{"BLASTPLUS_BLASTN_PATH"} || die "BLASTPLUS_BLASTN_PATH not set in config file $file!\n";
+		$BLASTPLUS_MAKEBLASTDB_PATH  = $config{"BLASTPLUS_MAKEBLASTDB_PATH"} || die "BLASTPLUS_MAKEBLASTDB_PATH not set in config file $file!\n";
+	}
+
 	$EXTRACTSEQ_PATH         		= $config{"EXTRACTSEQ_PATH"} || die "EXTRACTSEQ_PATH not set in config file $file!\n";
 	$DEFAULT_REQ_IS_PERCENT_ID		= $config{"DEFAULT_REQ_IS_PERCENT_ID"} || die "DEFAULT_REQ_IS_PERCENT_ID not set in config file $file!\n";
 	$DEFAULT_REQ_FLANK_PERCENT_ID	= $config{"DEFAULT_REQ_FLANK_PERCENT_ID"} || die "DEFAULT_REQ_FLANK_PERCENT_ID not set in config file $file!\n";

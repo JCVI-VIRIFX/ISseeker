@@ -56,6 +56,9 @@ use InsertionSeq::Flank;
 use InsertionSeq::Defaults qw(
     $BLASTALL_PATH
     $FORMATDB_PATH
+	$USE_LEGACYBLAST
+	$BLASTPLUS_BLASTN_PATH
+	$BLASTPLUS_MAKEBLASTDB_PATH
     $EXTRACTSEQ_PATH
     $DEFAULT_REQ_IS_PERCENT_ID
     $DEFAULT_REQ_FLANK_PERCENT_ID
@@ -148,16 +151,33 @@ sub checkForRequiredPrograms
 {
 	my $error = 0;
 
-	if ( !-e $FORMATDB_PATH || !-x $FORMATDB_PATH )
+	if ($USE_LEGACYBLAST eq "true")
 	{
-		print "Can't find formatdb at $FORMATDB_PATH\n";
-		$error = 1;
+		if ( !-e $FORMATDB_PATH || !-x $FORMATDB_PATH )
+		{
+			print "Can't find formatdb at $FORMATDB_PATH\n";
+			$error = 1;
+		}
+		if ( !-e $BLASTALL_PATH || !-x $BLASTALL_PATH )
+		{
+			print "Can't find blastall at $BLASTALL_PATH\n";
+			$error = 1;
+		}
 	}
-	if ( !-e $BLASTALL_PATH || !-x $BLASTALL_PATH )
+	else
 	{
-		print "Can't find blastall at $BLASTALL_PATH\n";
-		$error = 1;
+		if ( !-e $BLASTPLUS_MAKEBLASTDB_PATH || !-x $BLASTPLUS_MAKEBLASTDB_PATH )
+		{
+			print "Can't find makeblastdb at $BLASTPLUS_MAKEBLASTDB_PATH\n";
+			$error = 1;
+		}
+		if ( !-e $BLASTPLUS_BLASTN_PATH || !-x $BLASTPLUS_BLASTN_PATH )
+		{
+			print "Can't find blast+ blastn at $BLASTPLUS_BLASTN_PATH\n";
+			$error = 1;
+		}
 	}
+
 
 	exit if ($error);
 }
@@ -184,9 +204,19 @@ sub formatDB
 
 	## Don't use "-o T" - it has problems with long contig names:
 	#my $formatDBOut = system("$FORMATDB_PATH -i $fileName -p F -o T");
-	my $formatDBOut = system("$FORMATDB_PATH -i $fileName -p F");
 
-	$log->logdie ("Error running $FORMATDB_PATH $fileName\n") unless ($formatDBOut == 0);
+	my $formatDBOut;
+	if ($USE_LEGACYBLAST eq "true")
+	{
+		$formatDBOut = system("$FORMATDB_PATH -i $fileName -p F");
+		$log->logdie ("Error running $FORMATDB_PATH $fileName\n") unless ($formatDBOut == 0);
+	}
+	else
+	{
+		$formatDBOut = system("$BLASTPLUS_MAKEBLASTDB_PATH -in $fileName -dbtype nucl");
+		$log->logdie ("Error running $BLASTPLUS_MAKEBLASTDB_PATH $fileName\n") unless ($formatDBOut == 0);
+	}
+
 
 }
 
@@ -365,24 +395,46 @@ sub main
 		"dust=s"     	=> \$dust
 	);
 
+
+
 	if ($version)
 	{
     	print "ISseeker version $VERSION\n";
 		exit ;
 	}
 
-	##
+	InsertionSeq::Defaults::Process( $config_file );
+
 	## Dust defult is F (no dust)
 	##
-	$dustparam = "-F F" ;
+	if ($USE_LEGACYBLAST eq "true")
+	{
+		$dustparam = "-F F" ;
+	}
+	else
+	{
+		$dustparam = "-dust no";
+	}
+
 	if ($dust)
 	{
 		$dust = uc $dust;
 		die "--dust param must be T or F" unless ($dust eq "T" or $dust eq "F");
-		$dustparam = "-F $dust" ;
+		if ($dust eq "T")
+		{
+			if ($USE_LEGACYBLAST eq "true")
+			{
+				$dustparam = "-F T" ;
+			}
+			else
+			{
+				$dustparam = "-dust yes";
+			}
+		}
 	}
 
-	InsertionSeq::Defaults::Process( $config_file );
+
+	##
 
 	$is_req_pct		= $DEFAULT_REQ_IS_PERCENT_ID unless(defined($is_req_pct));
 	$flank_req_pct	= $DEFAULT_REQ_FLANK_PERCENT_ID unless (defined($flank_req_pct));
@@ -541,7 +593,16 @@ sub blast_is_genome()
 	formatDB($genome_path);
 	
 	#run blast of seq against genome
-	my $command = "$BLASTALL_PATH -p blastn -d $genome_path -e .01 -m 8 $dustparam -i $is_path";
+	my $command;
+	if ($USE_LEGACYBLAST eq "true")
+	{
+		$command = "$BLASTALL_PATH -p blastn -d $genome_path -e .01 -m 8 $dustparam -i $is_path";
+	}
+	else
+	{
+		#$command = "$BLASTPLUS_BLASTN_PATH  -word_size 11 -db $genome_path -evalue .01 $dustparam -query $is_path -outfmt \"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore\"";
+		$command = "$BLASTPLUS_BLASTN_PATH -task blastn -db $genome_path -evalue .01 $dustparam -query $is_path -outfmt \"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore\"";
+	}
 	$log->info("$command\n");
 	my $blastout = `$command`;
 	$log->logdie("Error ${^CHILD_ERROR_NATIVE} returned from command: $command.\n\n") if (${^CHILD_ERROR_NATIVE});
@@ -1156,7 +1217,16 @@ sub blastAnnotation
 	
 	$log->debug("Blast $flank->{contig_direction} $flank->{contig_name} \n");
 	
-	my $command ="$BLASTALL_PATH  -p blastn -d $annotation_fasta  -e .0000000001 -m 8 $dustparam -i $flank_seq_file";
+	my $command;
+	if ($USE_LEGACYBLAST eq "true")
+	{
+		$command ="$BLASTALL_PATH  -p blastn -d $annotation_fasta  -e .0000000001 -m 8 $dustparam -i $flank_seq_file";
+	}
+	else
+	{
+		#$command = "$BLASTPLUS_BLASTN_PATH  -word_size 11 -db $annotation_fasta -evalue .0000000001 $dustparam -query $flank_seq_file -outfmt \"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore\"";
+		$command = "$BLASTPLUS_BLASTN_PATH -task blastn -db $annotation_fasta -evalue .0000000001 $dustparam -query $flank_seq_file -outfmt \"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore\"";
+	}
 	$log->debug("$command\n");
 	
 	my $blastout = `$command`;
@@ -1261,7 +1331,18 @@ sub blast_is_against_annotation()
     formatDB($annot_fasta_path);
 
     #run blast of seq against annotation
-    my $command = "$BLASTALL_PATH -p blastn -d $annot_fasta_path -e .0000000001 -m 8 $dustparam -i $is_path";
+    my $command;
+	if ($USE_LEGACYBLAST eq "true")
+	{
+    	$command = "$BLASTALL_PATH -p blastn -d $annot_fasta_path -e .0000000001 -m 8 $dustparam -i $is_path";
+	}
+	else
+	{
+		#$command = "$BLASTPLUS_BLASTN_PATH  -word_size 11 -db $annot_fasta_path -evalue .0000000001 $dustparam -query $is_path -outfmt \"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore\"";
+		$command = "$BLASTPLUS_BLASTN_PATH -task blastn -db $annot_fasta_path -evalue .0000000001 $dustparam -query $is_path -outfmt \"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore\"";
+
+	}
+
     $log->info("$command\n");
     my $blastout = `$command`;
 	$log->logdie("Error ${^CHILD_ERROR_NATIVE} returned from command: $command.\n\n") if (${^CHILD_ERROR_NATIVE});
